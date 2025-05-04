@@ -1,28 +1,43 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import tseslint from 'typescript-eslint'
+import react from 'eslint-plugin-react';
+import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import prettier from 'eslint-plugin-prettier';
 
-export default tseslint.config(
-  { ignores: ['dist'] },
+export default [
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ['**/*.{ts,tsx}'],
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    ignores: ['node_modules'],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
+      ecmaVersion: 2021,
+      sourceType: 'module',
+      parser: tsParser,
     },
     plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
+      react,
+      '@typescript-eslint': tsPlugin,
+      prettier,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
+      'no-var': 'warn',
+      eqeqeq: 'warn',
+      'dot-notation': 'warn',
+      'no-unused-vars': 'warn',
+      'react/destructuring-assignment': 'warn',
+      'react/jsx-pascal-case': 'warn',
+      'react/no-direct-mutation-state': 'warn',
+      'react/jsx-no-useless-fragment': 'warn',
+      'react/no-unused-state': 'warn',
+      'react/jsx-key': 'warn',
+      'react/self-closing-comp': 'warn',
+      'react/jsx-curly-brace-presence': 'warn',
+      'prettier/prettier': [
+        'error',
+        {
+          endOfLine: 'auto',
+        },
       ],
+      'react/react-in-jsx-scope': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
-)
+];
