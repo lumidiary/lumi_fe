@@ -4,7 +4,7 @@ import styled from 'styled-components';
 interface ButtonProps {
   onClick?: () => void;
   buttonText: string;
-  type?: 'default | etc';
+  type?: 'default' | 'etc';
   className?: string;
   isDisabled?: boolean;
   style?: React.CSSProperties;
