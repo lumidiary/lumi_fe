@@ -10,6 +10,7 @@ import {
   loginIdErrorMessage,
   loginPasswordErrorMessage,
 } from '@/utils/validationMessages';
+import Logo from '@assets/logo.svg?react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ const Login = () => {
       <BackHeader title="로그인" />
       <ContentContainer>
         <Card>
-          <Logo>Logo</Logo>
+          <Logo />
           <Form>
             <Label>ID</Label>
             <Input
@@ -110,22 +111,11 @@ const ContentContainer = styled.div`
   }
 `;
 
-const Logo = styled.div`
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background-color: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  font-weight: bold;
-`;
-
 const Form = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  margin-top: 2rem;
 `;
 
 const Label = styled.label`

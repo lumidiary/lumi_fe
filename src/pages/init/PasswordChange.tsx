@@ -18,6 +18,7 @@ import {
   passwordErrorMessage,
   passwordConfirmErrorMessage,
 } from '@/utils/validationMessages';
+import Logo from '@assets/logo.svg?react';
 
 const PasswordChange = () => {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ const PasswordChange = () => {
       <BackHeader title="비밀번호 변경" />
       <ContentContainer>
         <Card>
-          <Logo>Logo</Logo>
+          <Logo />
           <Form>
             <Label>Email</Label>
             <EmailRow>
@@ -149,22 +150,11 @@ const ContentContainer = styled.div`
   }
 `;
 
-const Logo = styled.div`
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background-color: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  font-weight: bold;
-`;
-
 const Form = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  margin-top: 1.5rem;
 `;
 
 const Label = styled.label`
