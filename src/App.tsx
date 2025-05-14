@@ -18,7 +18,7 @@ const App = () => (
       <Routes>
         {/* Init */}
         <Route path="/signup" element={<Signup />} />
-        <Route path="/password-change" element={<PasswordChange />} />
+        <Route path="/PasswordChange" element={<PasswordChange />} />
         <Route path="/login" element={<Login />} />
 
         <Route path="/" element={<Home />} />
@@ -39,7 +39,7 @@ export default App;
 
 const Container = styled.div`
   width: 100%;
-  height: 97vh;
+  height: 100vh;
   justify-content: center;
   align-items: center;
   display: flex;
