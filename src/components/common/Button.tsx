@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 
 interface ButtonProps {
   onClick?: () => void;
   buttonText: string;
-  type?: 'default' | 'etc';
+  type?: 'default' | 'etc' | 'login' | 'request';
   className?: string;
   isDisabled?: boolean;
   style?: React.CSSProperties;
@@ -32,14 +32,23 @@ const Button = ({
   bgColor,
   txtColor,
 }: ButtonProps) => {
+  const [toggled, setToggled] = useState(false);
+
+  const handleClick = () => {
+    if (type === 'request') {
+      setToggled(prev => !prev);
+    }
+    if (onClick) onClick();
+  };
   return (
     <ButtonContainer
       className={`button ${type} ${className}`}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={isDisabled}
       style={style}
       bgColor={bgColor}
       txtColor={txtColor}
+      toggled={toggled}
     >
       {buttonText}
     </ButtonContainer>
@@ -48,7 +57,11 @@ const Button = ({
 
 export default Button;
 
-const ButtonContainer = styled.button<{ bgColor?: string; txtColor?: string }>`
+const ButtonContainer = styled.button<{
+  bgColor?: string;
+  txtColor?: string;
+  toggled?: boolean;
+}>`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -67,5 +80,27 @@ const ButtonContainer = styled.button<{ bgColor?: string; txtColor?: string }>`
     border-radius: 0.5rem;
     padding: 1rem 0;
     font-size: 1rem;
+  }
+
+  // 로그인, 회원가입, 비밀번호 변경 버튼
+  &.login {
+    width: 100%;
+    background-color: #4b9cd3;
+    color: #fff;
+    border-radius: 0.5rem;
+    padding: 0.8rem 0;
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
+  // 인증 요청
+  &.request {
+    width: 25%;
+    background-color: #fff;
+    color: ${({ toggled }) => (toggled ? '#4b9cd3' : '#000')};
+    border: 1px solid ${({ toggled }) => (toggled ? '#4b9cd3' : '#d1d5db')};
+    border-radius: 0.5rem;
+    padding: 0.6rem;
+    font-size: 0.8rem;
   }
 `;
