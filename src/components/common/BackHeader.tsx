@@ -18,7 +18,7 @@ const BackHeader = ({ title }: HeaderProps) => {
       <IoArrowBackOutline
         color="#000"
         size={24}
-        style={{ paddingLeft: '14rem' }}
+        style={{ paddingLeft: '14rem', cursor: 'pointer' }}
         onClick={handleBack}
       />
       <Title>{title}</Title>
