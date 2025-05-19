@@ -5,6 +5,7 @@ export { default as Login } from './init/Login';
 //diary
 export { default as DiaryList } from './diary/DiaryList';
 export { default as DiaryDetail } from './diary/DiaryDetail';
+export { default as DiaryImageUpload } from './diary/DiaryImageUpload';
 export { default as DiaryCreate } from './diary/DiaryCreate';
 //etc
 export { default as Home } from './Home';

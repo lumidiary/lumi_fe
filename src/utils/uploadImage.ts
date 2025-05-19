@@ -17,3 +17,12 @@ export const convertToImageUrl = (file: File): Promise<string> => {
     reader.readAsDataURL(file);
   });
 };
+
+export const ImageUrlsFromInputEvent = (
+  e: React.ChangeEvent<HTMLInputElement>,
+  maxCount = 4,
+): string[] => {
+  if (!e.target.files) return [];
+  const selectedFiles = Array.from(e.target.files).slice(0, maxCount);
+  return selectedFiles.map(file => URL.createObjectURL(file));
+};

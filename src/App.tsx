@@ -7,6 +7,7 @@ import {
   Home,
   DiaryList,
   DiaryDetail,
+  DiaryImageUpload,
   DiaryCreate,
   Digest,
   Settings,
@@ -26,7 +27,8 @@ const App = () => (
         {/* Diary */}
         <Route path="/list" element={<DiaryList />} />
         <Route path="/detail/:diaryId" element={<DiaryDetail />} />
-        <Route path="/create" element={<DiaryCreate />} />
+        <Route path="/create/image-upload" element={<DiaryImageUpload />} />
+        <Route path="/create/content" element={<DiaryCreate />} />
 
         <Route path="/digest/:month" element={<Digest />} />
         <Route path="/settings" element={<Settings />} />
