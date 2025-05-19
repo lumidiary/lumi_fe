@@ -4,7 +4,14 @@ import styled from 'styled-components';
 interface ButtonProps {
   onClick?: () => void;
   buttonText: string;
-  type?: 'default' | 'etc' | 'login' | 'request';
+  type?:
+    | 'default'
+    | 'etc'
+    | 'login'
+    | 'request'
+    | 'header_signup'
+    | 'header_login'
+    | 'setting';
   className?: string;
   isDisabled?: boolean;
   style?: React.CSSProperties;
@@ -102,5 +109,30 @@ const ButtonContainer = styled.button<{
     border-radius: 0.5rem;
     padding: 0.6rem;
     font-size: 0.8rem;
+  }
+
+  // Header
+  &.header_signup {
+    background-color: #4b9cd3;
+    color: #fff;
+    border-radius: 0.4rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  &.header_login {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #d9d9d9;
+    border-radius: 0.4rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  &.setting {
+    background-color: ${({ bgColor }) => bgColor || '#4b9cd3'};
+    color: ${({ txtColor }) => txtColor || '#fff'};
+    border-radius: 0.3rem;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
   }
 `;

@@ -4,10 +4,15 @@ import styled from 'styled-components';
 interface CardProps {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }
 
-const Card = ({ children, className }: CardProps) => {
-  return <CardContainer className={className}>{children}</CardContainer>;
+const Card = ({ children, className, style }: CardProps) => {
+  return (
+    <CardContainer className={className} style={style}>
+      {children}
+    </CardContainer>
+  );
 };
 
 export default Card;
