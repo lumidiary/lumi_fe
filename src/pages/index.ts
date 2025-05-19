@@ -11,3 +11,4 @@ export { default as DiaryCreate } from './diary/DiaryCreate';
 export { default as Home } from './Home';
 export { default as Digest } from './Digest';
 export { default as Settings } from './Settings';
+export { default as ProfileEdit } from './ProfileEdit';

@@ -11,6 +11,7 @@ import {
   DiaryCreate,
   Digest,
   Settings,
+  ProfileEdit,
 } from '@pages/index';
 
 const App = () => (
@@ -21,6 +22,7 @@ const App = () => (
         <Route path="/signup" element={<Signup />} />
         <Route path="/password-change" element={<PasswordChange />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/profile-edit" element={<ProfileEdit />} />
 
         <Route path="/" element={<Home />} />
 
