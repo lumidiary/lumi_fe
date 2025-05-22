@@ -7,9 +7,11 @@ import {
   Home,
   DiaryList,
   DiaryDetail,
+  DiaryImageUpload,
   DiaryCreate,
   Digest,
   Settings,
+  ProfileEdit,
 } from '@pages/index';
 
 const App = () => (
@@ -18,15 +20,17 @@ const App = () => (
       <Routes>
         {/* Init */}
         <Route path="/signup" element={<Signup />} />
-        <Route path="/PasswordChange" element={<PasswordChange />} />
+        <Route path="/password-change" element={<PasswordChange />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/profile-edit" element={<ProfileEdit />} />
 
         <Route path="/" element={<Home />} />
 
         {/* Diary */}
         <Route path="/list" element={<DiaryList />} />
         <Route path="/detail/:diaryId" element={<DiaryDetail />} />
-        <Route path="/create" element={<DiaryCreate />} />
+        <Route path="/create/image-upload" element={<DiaryImageUpload />} />
+        <Route path="/create/content" element={<DiaryCreate />} />
 
         <Route path="/digest/:month" element={<Digest />} />
         <Route path="/settings" element={<Settings />} />
@@ -39,7 +43,7 @@ export default App;
 
 const Container = styled.div`
   width: 100%;
-  height: 100vh;
+  height: 98vh;
   justify-content: center;
   align-items: center;
   display: flex;

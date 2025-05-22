@@ -1,5 +1,5 @@
 /*
- * 회원가입 페이지 (3)
+ * 프로필 수정 페이지 (11)
  */
 
 import { useState } from 'react';
@@ -9,8 +9,6 @@ import { BackHeader, Button, Card, Input } from '@components/common';
 import {
   validateEmail,
   validateNickname,
-  validatePassword,
-  confirmPasswordMatch,
   validateYear,
   validateMonth,
   validateDay,
@@ -22,20 +20,16 @@ import {
   nicknameErrorMessage,
   nicknameAvailableMessage,
   nicknameRequiredMessage,
-  passwordErrorMessage,
-  passwordConfirmErrorMessage,
   yearErrorMessage,
   monthErrorMessage,
   dayErrorMessage,
 } from '@/utils/validationMessages';
 import ProfilePhoto from '@components/ProfilePhoto';
 
-const SignUp = () => {
+const ProfileEdit = () => {
   const navigate = useNavigate();
   const [emailMessage, setEmailMessage] = useState('');
   const [nicknameMessage, setNicknameMessage] = useState('');
-  const [passwordMessage, setPasswordMessage] = useState('');
-  const [passwordConfirmMessage, setPasswordConfirmMessage] = useState('');
   const [birthMessage, setBirthMessage] = useState('');
   const [emailChecked, setEmailChecked] = useState(false);
   const [nicknameChecked, setNicknameChecked] = useState(false);
@@ -64,11 +58,6 @@ const SignUp = () => {
   };
 
   const handleSignUp = () => {
-    const password = (document.getElementById('password') as HTMLInputElement)
-      ?.value;
-    const confirmPassword = (
-      document.getElementById('confirmPassword') as HTMLInputElement
-    )?.value;
     const year = parseInt(
       (document.getElementById('year') as HTMLInputElement)?.value,
     );
@@ -91,20 +80,6 @@ const SignUp = () => {
       valid = false;
     }
 
-    if (!validatePassword(password)) {
-      setPasswordMessage(passwordErrorMessage);
-      valid = false;
-    } else {
-      setPasswordMessage('');
-    }
-
-    if (!confirmPasswordMatch(password, confirmPassword)) {
-      setPasswordConfirmMessage(passwordConfirmErrorMessage);
-      valid = false;
-    } else {
-      setPasswordConfirmMessage('');
-    }
-
     if (!validateYear(year)) {
       setBirthMessage(yearErrorMessage);
       valid = false;
@@ -119,14 +94,14 @@ const SignUp = () => {
     }
 
     if (valid) {
-      console.log('회원가입 요청');
-      navigate('/login');
+      console.log('프로필 수정');
+      navigate('/settings', { replace: true });
     }
   };
 
   return (
     <Container>
-      <BackHeader title="회원가입" />
+      <BackHeader title="프로필 수정" />
       <ContentContainer>
         <Card>
           <ProfilePhoto />
@@ -141,24 +116,6 @@ const SignUp = () => {
               />
             </Row>
             {emailMessage && <Message>{emailMessage}</Message>}
-
-            <Label>Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Password를 입력하세요"
-            />
-            {passwordMessage && <Message>{passwordMessage}</Message>}
-
-            <Label>Password 확인</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="Password를 다시 입력하세요"
-            />
-            {passwordConfirmMessage && (
-              <Message>{passwordConfirmMessage}</Message>
-            )}
 
             <Label>Nickname</Label>
             <Row>
@@ -196,7 +153,7 @@ const SignUp = () => {
 
             <Button
               type="login"
-              buttonText="회원가입"
+              buttonText="프로필 수정"
               onClick={handleSignUp}
               style={{ marginTop: '3rem' }}
             />
@@ -207,7 +164,7 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default ProfileEdit;
 
 const Container = styled.div`
   display: flex;
