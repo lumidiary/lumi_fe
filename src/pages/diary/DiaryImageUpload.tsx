@@ -5,7 +5,12 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { BackHeader, Button, Card } from '@components/common/index';
+import {
+  BackHeader,
+  Button,
+  Card,
+  ContentContainer,
+} from '@components/common/index';
 import { ImageUrlsFromInputEvent } from '@utils/uploadImage';
 import LeftArrow from '@/assets/left_arrow.svg?react';
 import RightArrow from '@/assets/right_arrow.svg?react';
@@ -107,20 +112,6 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
-`;
-
-const ContentContainer = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  gap: 2rem;
-  overflow-y: auto;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
 `;
 
 const StepOne = styled.div`

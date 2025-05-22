@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled, { css } from 'styled-components';
-import { BackHeader, Button, Card } from '@components/common';
+import { BackHeader, Button, Card, ContentContainer } from '@components/common';
 import AiIcon from '@/assets/ai.svg?react';
 
 const moods = [
@@ -97,21 +97,6 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
-`;
-
-const ContentContainer = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  gap: 2rem;
-  overflow-y: auto;
-  padding: 2rem 0;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
 `;
 
 const Title = styled.p`
