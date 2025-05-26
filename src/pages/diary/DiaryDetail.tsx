@@ -26,7 +26,7 @@ const DiaryDetail = () => {
 
   const handleDeleteDiary = () => {
     setIsModalVisible(false);
-    navigate('/list', { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (
