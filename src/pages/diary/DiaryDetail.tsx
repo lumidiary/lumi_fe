@@ -1,202 +1,171 @@
-import React, { useState, useEffect } from 'react';
+/*
+ * 일기 상세보기 (6)
+ */
+
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { getDiaryDetail } from '../../services/diary';
-import { Diary } from '@/types/diary';
-import { IoArrowBackCircle, IoArrowForwardCircle } from 'react-icons/io5';
-import { deleteDiary } from '../../services/diary';
-import { RiDeleteBinLine } from 'react-icons/ri';
-import { MdOutlinePlace } from 'react-icons/md';
+import { FaRegTrashAlt, FaMapMarkerAlt } from 'react-icons/fa';
 import { LuCalendar } from 'react-icons/lu';
+import { BackHeader, Card, ContentContainer } from '@components/common';
+import ImageFrame from '@components/ImageFrame';
+import DiaryDeleteModal from '@components/modal/DiaryDeleteModal';
+import { postDetail } from '@constants/dummy';
+import { emotionEmojiMap, EmotionType } from '@/types/emotion';
 
 const DiaryDetail = () => {
   const { diaryId } = useParams<{ diaryId: string }>();
   const navigate = useNavigate();
-  const [diary, setDiary] = useState<Diary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const handleDelete = async () => {
-    if (!diary) return;
-    const ok = window.confirm('정말 이 일기를 삭제하시겠습니까?');
-    if (!ok) return;
-
-    try {
-      await deleteDiary(diary.id);
-      navigate('/list'); // 삭제 후 목록으로 돌아가기
-    } catch (e) {
-      console.error(e);
-      alert('삭제 중 오류가 발생했습니다.');
-    }
+  const diary = {
+    ...postDetail,
+    id: Number(diaryId),
   };
 
-  useEffect(() => {
-    if (!diaryId) return;
-    // 더미 데이터 세팅 (나중에 API 연동)
-    const dummy: Diary = {
-      id: +diaryId,
-      date: '2025-05-11',
-      emotion: '😊',
-      content: '오늘은 좋은 하루였어요! 하루 종일 산책을 했습니다.',
-      location: '   서울시 성북구',
-      imageUrl: [''],
-      tags: ['카페', '친구', '산책'],
-      questions: [
-        { question: '오늘 기분이 어땠나요?', answer: '매우 좋았어요!' },
-      ],
-    };
-    setDiary(dummy);
-    setLoading(false);
-  }, [diaryId]);
-
-  if (loading)
-    return (
-      <Container>
-        <Message>로딩 중...</Message>
-      </Container>
-    );
-  if (error || !diary)
-    return (
-      <Container>
-        <Message>오류가 발생했습니다.</Message>
-      </Container>
-    );
+  const handleDeleteDiary = () => {
+    setIsModalVisible(false);
+    navigate('/', { replace: true });
+  };
 
   return (
     <Container>
-      <Header>
-        <BackBtn onClick={() => navigate(-1)} />
-        <PageTitle>일기 상세보기</PageTitle>
-      </Header>
+      <BackHeader title="일기 상세보기" />
+      <ContentContainer>
+        <Card style={{ width: '100%' }}>
+          <PostInfo>
+            <InfoBox>
+              <TopRow>
+                <LeftSide>
+                  <Emotion>
+                    {emotionEmojiMap[diary.emotion as EmotionType]}
+                  </Emotion>
+                  <DateLocation>
+                    <DateText>
+                      <LuCalendar
+                        size={18}
+                        style={{ color: '#757575', marginRight: '8px' }}
+                      />
+                      {diary.date} (월요일)
+                    </DateText>
+                    <Location>
+                      <FaMapMarkerAlt
+                        size={20}
+                        style={{ marginRight: '4px' }}
+                      />
+                      {diary.location}
+                    </Location>
+                  </DateLocation>
+                </LeftSide>
 
-      <Card>
-        <Top>
-          <InfoBox>
-            <Row>
-              <Emotion>{diary.emotion}</Emotion>
-              <DateText>
-                <LuCalendar size={16} style={{ marginRight: '4px' }} />
-                {diary.date} (월요일)
-              </DateText>
-            </Row>
-            <Location>
-              <MdOutlinePlace size={16} style={{ marginRight: '4px' }} />
-              {diary.location}
-            </Location>
-            <TagList>
-              {diary.tags.map((t, i) => (
-                <Tag key={i}>{t}</Tag>
-              ))}
-            </TagList>
-            <DeleteBtn onClick={handleDelete}>
-              <RiDeleteBinLine size={24} color="#ff4d4f" />
-            </DeleteBtn>
-          </InfoBox>
+                <FaRegTrashAlt
+                  size={24}
+                  color="#6B7280"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setIsModalVisible(true)}
+                />
+              </TopRow>
 
-          <ImageArea>
-            <NavArrow
-              onClick={() =>
+              <TagList>
+                {diary.tags.map((t, i) => (
+                  <Tag key={i}>{t}</Tag>
+                ))}
+              </TagList>
+            </InfoBox>
+
+            <ImageFrame
+              images={diary.imageUrl}
+              currentIndex={currentImageIdx}
+              onPrev={() =>
                 setCurrentImageIdx(
                   idx =>
                     (idx - 1 + diary.imageUrl.length) % diary.imageUrl.length,
                 )
               }
-            >
-              <IoArrowBackCircle size={32} color="#aaa" />
-            </NavArrow>
-            {diary.imageUrl.length ? (
-              <Image src={diary.imageUrl[currentImageIdx]} alt="Diary" />
-            ) : (
-              <Placeholder />
-            )}
-            <NavArrow
-              right
-              onClick={() =>
+              onNext={() =>
                 setCurrentImageIdx(idx => (idx + 1) % diary.imageUrl.length)
               }
-            >
-              <IoArrowForwardCircle size={32} color="#aaa" />
-            </NavArrow>
-          </ImageArea>
-        </Top>
+            />
+          </PostInfo>
 
-        <Bottom>
-          <Question>{diary.questions[0].question}</Question>
-          <Answer>{diary.questions[0].answer}</Answer>
-        </Bottom>
-      </Card>
+          <Qa>
+            {diary.questions.map((q, i) => (
+              <div key={i}>
+                <Question>Q. {q.question}</Question>
+                <Answer>{q.answer}</Answer>
+              </div>
+            ))}
+          </Qa>
+        </Card>
+      </ContentContainer>
+
+      <DiaryDeleteModal
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onDelete={handleDeleteDiary}
+      />
     </Container>
   );
 };
 
 export default DiaryDetail;
 
-// Styled Components
 const Container = styled.div`
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 40px 20px;
-`;
-
-const Header = styled.div`
   display: flex;
-  align-items: center;
-  margin-bottom: 16px;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
 `;
 
-const BackBtn = styled.button.attrs({ 'aria-label': '뒤로' })`
-  background: none;
-  border: none;
-  font-size: 32px;
-  margin-right: 12px;
-  cursor: pointer;
-`;
-
-const PageTitle = styled.h2`
-  font-size: 20px;
-  font-weight: 500;
-`;
-
-const Card = styled.div`
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  background: #fff;
-`;
-
-const Top = styled.div`
+const PostInfo = styled.div`
   position: relative;
+  width: 100%;
 `;
 
 const InfoBox = styled.div`
-  padding: 16px;
   background: #fff;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  border-bottom: 1px solid #eee;
+  gap: 12px;
+  padding-bottom: 1rem;
 `;
 
-const Row = styled.div`
+const TopRow = styled.div`
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+`;
+
+const LeftSide = styled.div`
+  display: flex;
+  gap: 12px;
 `;
 
 const Emotion = styled.span`
-  font-size: 24px;
+  font-size: 2rem;
+`;
+
+const DateLocation = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const DateText = styled.span`
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #000;
+  display: flex;
+  align-items: center;
 `;
 
 const Location = styled.span`
-  font-size: 14px;
-  color: #666;
+  font-size: 0.8rem;
+  color: #757575;
+  display: flex;
+  align-items: center;
 `;
 
 const TagList = styled.div`
@@ -213,59 +182,19 @@ const Tag = styled.span`
   border-radius: 12px;
 `;
 
-const DeleteBtn = styled.button`
-  align-self: flex-end;
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-`;
-
-const ImageArea = styled.div`
-  position: relative;
-  background: #f5f5f5;
-  height: 400px;
-`;
-
-const Placeholder = styled.div`
+const Qa = styled.div`
   width: 100%;
-  height: 100%;
-  background: #f5f5f5;
-`;
-
-const Image = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const NavArrow = styled.div<{ right?: boolean }>`
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  ${({ right }) => (right ? 'right: 12px;' : 'left: 12px;')}
-  cursor: pointer;
-  z-index: 2;
-`;
-
-const Bottom = styled.div`
-  padding: 24px;
-  background: #fff;
+  flex-direction: column;
 `;
 
 const Question = styled.p`
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: bold;
   color: #4b9cd3;
 `;
 
 const Answer = styled.p`
-  font-size: 14px;
+  font-size: 0.8rem;
   line-height: 1.6;
-  color: #333;
-`;
-
-const Message = styled.p`
-  font-size: 16px;
-  text-align: center;
+  color: #374151;
 `;

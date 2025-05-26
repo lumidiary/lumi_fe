@@ -5,7 +5,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { BackHeader, Button, Card, Input } from '@components/common';
+import {
+  BackHeader,
+  Button,
+  Card,
+  Input,
+  ContentContainer,
+} from '@components/common';
 import {
   validateEmail,
   validateNickname,
@@ -214,19 +220,6 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
-`;
-
-const ContentContainer = styled.div`
-  max-height: 100vh;
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-y: auto;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
 `;
 
 const Form = styled.div`

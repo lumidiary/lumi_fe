@@ -12,6 +12,7 @@ import {
   Digest,
   Settings,
   ProfileEdit,
+  DigestList,
 } from '@pages/index';
 
 const App = () => (
@@ -27,11 +28,12 @@ const App = () => (
         <Route path="/" element={<Home />} />
 
         {/* Diary */}
-        <Route path="/list" element={<DiaryList />} />
+        <Route path="/diary/list" element={<DiaryList />} />
         <Route path="/detail/:diaryId" element={<DiaryDetail />} />
         <Route path="/create/image-upload" element={<DiaryImageUpload />} />
         <Route path="/create/content" element={<DiaryCreate />} />
 
+        <Route path="/digest/list" element={<DigestList />} />
         <Route path="/digest/:month" element={<Digest />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
@@ -43,11 +45,12 @@ export default App;
 
 const Container = styled.div`
   width: 100%;
-  height: 98vh;
+  min-height: 98vh;
   justify-content: center;
   align-items: center;
   display: flex;
   background-color: #f9fafb;
+  overflow-y: auto;
 
   // 텍스트 클릭 방지
   user-select: none;

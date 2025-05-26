@@ -3,6 +3,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import KakaoMap from '@/components/KakaoMap';
+import { BackHeader, ContentContainer } from '@components/common';
+import {
+  DigestDiaryCard,
+  DigestRecordCard,
+  EmotionStatList,
+} from '@components/index';
 
 const Digest = () => {
   const [activeTab, setActiveTab] = useState<'diary' | 'stats'>('diary');
@@ -65,200 +71,114 @@ const Digest = () => {
   }, []);
 
   return (
-    <PageContainer>
-      <FixedHeader>
-        <HeaderContent>
-          <BackButton onClick={() => navigate('/')}>←</BackButton>
-          <Title>다이제스트 상세보기</Title>
-        </HeaderContent>
-      </FixedHeader>
+    <Container>
+      <BackHeader title="다이제스트 상세보기" />
+      <ContentContainer>
+        <Wrapper>
+          <SummaryCard>
+            <CardTopBackground>
+              <TitleBox>
+                <DateText>{yearMonthText}</DateText>
+                <CardTitle>{yearMonthText} 다이제스트</CardTitle>
+              </TitleBox>
+            </CardTopBackground>
 
-      <ContentWrapper>
-        <SummaryCard>
-          <CardTopBackground>
-            <TitleBox>
-              <DateText>{yearMonthText}</DateText>
-              <CardTitle>{yearMonthText} 다이제스트</CardTitle>
-            </TitleBox>
-          </CardTopBackground>
-
-          <EmotionBlock>
-            <EmotionRow>
-              <Emoji>{digestSummary?.topEmoji || '😊'}</Emoji>
-              <BoldText>
-                {digestSummary?.summaryEmotion ||
-                  '이번 달은 행복한 달이었어요!'}
-              </BoldText>
-            </EmotionRow>
-            <DescText>
-              총 {digestSummary?.diaryCount || 0}회의 일기를 작성했습니다.
-            </DescText>
-            {digestSummary?.summaryText && (
-              <DescText style={{ marginTop: '8px', whiteSpace: 'pre-line' }}>
-                {digestSummary.summaryText}
+            <EmotionBlock>
+              <EmotionRow>
+                <Emoji>{digestSummary?.topEmoji || '😊'}</Emoji>
+                <BoldText>
+                  {digestSummary?.summaryEmotion ||
+                    '이번 달은 행복한 달이었어요!'}
+                </BoldText>
+              </EmotionRow>
+              <DescText>
+                총 {digestSummary?.diaryCount || 0}회의 일기를 작성했습니다.
               </DescText>
-            )}
-          </EmotionBlock>
-        </SummaryCard>
+              {digestSummary?.summaryText && (
+                <DescText style={{ marginTop: '8px', whiteSpace: 'pre-line' }}>
+                  {digestSummary.summaryText}
+                </DescText>
+              )}
+            </EmotionBlock>
+          </SummaryCard>
 
-        <RecordSection>
-          <SectionTitle>AI가 분석한 이번 달의 기록</SectionTitle>
-          <RecordList>
-            {[0, 1, 2].map(i => {
-              const r = records[i] || {};
-              return (
-                <RecordCard key={i}>
-                  <RecordTitle>{r.title || `제목 없음 ${i + 1}`}</RecordTitle>
-                  <RecordContent>
-                    {r.content || '아직 분석된 내용이 없습니다.'}
-                  </RecordContent>
-                </RecordCard>
-              );
-            })}
-          </RecordList>
-        </RecordSection>
-
-        <TabWrapper>
-          <TabButton
-            active={activeTab === 'diary'}
-            onClick={() => setActiveTab('diary')}
-          >
-            작성한 일기
-          </TabButton>
-          <TabButton
-            active={activeTab === 'stats'}
-            onClick={() => setActiveTab('stats')}
-          >
-            통계
-          </TabButton>
-        </TabWrapper>
-
-        <TabContent>
-          {activeTab === 'diary' && (
-            <div>
+          <RecordSection>
+            <SectionTitle>AI가 분석한 이번 달의 기록</SectionTitle>
+            <RecordList>
               {[0, 1, 2].map(i => {
-                const diary = diaries[i] || {};
-
+                const r = records[i] || {};
                 return (
-                  <DiaryCard key={i}>
-                    <DiaryTopRow>
-                      <DiaryLeftGroup>
-                        <EmojiBox>{diary.emotion || '😊'}</EmojiBox>
-                        <DiaryDate>{diary.date || '날짜 없음'}</DiaryDate>
-                      </DiaryLeftGroup>
-                      <DiaryLocation>
-                        {diary.location || '위치 없음'}
-                      </DiaryLocation>
-                    </DiaryTopRow>
-                    <Divider />
-                    <DiaryContentRow>
-                      <DiaryImageBox>
-                        {diary.imageUrl ? (
-                          <img src={diary.imageUrl} alt="diary" />
-                        ) : (
-                          <div className="no-image">이미지 없음</div>
-                        )}
-                      </DiaryImageBox>
-
-                      <DiaryTextBlock>
-                        <DiaryPrompt>{diary.prompt || '질문 없음'}</DiaryPrompt>
-                        <DiaryPreview>
-                          {diary.preview || '내용 없음'}
-                        </DiaryPreview>
-                      </DiaryTextBlock>
-                    </DiaryContentRow>
-                  </DiaryCard>
+                  <DigestRecordCard
+                    key={i}
+                    index={i}
+                    title={r.title}
+                    content={r.content}
+                  />
                 );
               })}
-            </div>
-          )}
+            </RecordList>
+          </RecordSection>
 
-          {activeTab === 'stats' && (
-            <>
-              <StatsSection>
-                <SectionTitle>이번 달 감정 통계</SectionTitle>
-                <EmotionStatList>
-                  {(digestSummary?.emotionStats || []).map(
-                    (
-                      stat: { emoji: string; count: number; label: string },
-                      index: number,
-                    ) => (
-                      <EmotionStatItem key={index}>
-                        <EmojiText>{stat.emoji}</EmojiText>
-                        <EmotionCount>{stat.count}</EmotionCount>
-                        <EmotionLabel>{stat.label}</EmotionLabel>
-                      </EmotionStatItem>
-                    ),
-                  )}
-                </EmotionStatList>
-              </StatsSection>
+          <TabWrapper>
+            <TabButton
+              active={activeTab === 'diary'}
+              onClick={() => setActiveTab('diary')}
+            >
+              작성한 일기
+            </TabButton>
+            <TabButton
+              active={activeTab === 'stats'}
+              onClick={() => setActiveTab('stats')}
+            >
+              통계
+            </TabButton>
+          </TabWrapper>
 
-              <StatsSection>
-                <SectionTitle>이번 달 방문한 장소</SectionTitle>
-                <KakaoMap places={digestSummary?.places || []} />
-              </StatsSection>
-            </>
-          )}
-        </TabContent>
-      </ContentWrapper>
-    </PageContainer>
+          <TabContent>
+            {activeTab === 'diary' && (
+              <DigestCardList>
+                {[0, 1, 2].map(i => {
+                  const diary = diaries[i] || {};
+                  return <DigestDiaryCard key={i} diary={diary} />;
+                })}
+              </DigestCardList>
+            )}
+
+            {activeTab === 'stats' && (
+              <>
+                <StatsSection>
+                  <SectionTitle>이번 달 감정 통계</SectionTitle>
+                  <EmotionStatList stats={digestSummary?.emotionStats || []} />
+                </StatsSection>
+
+                <StatsSection>
+                  <SectionTitle>이번 달 방문한 장소</SectionTitle>
+                  <KakaoMap places={digestSummary?.places || []} />
+                </StatsSection>
+              </>
+            )}
+          </TabContent>
+        </Wrapper>
+      </ContentContainer>
+    </Container>
   );
 };
 
 export default Digest;
 
-const PageContainer = styled.div`
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  min-height: 100vh;
-  background-color: #f8f9fb;
+  height: 100%;
+`;
+
+const Wrapper = styled.div`
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-`;
-
-const FixedHeader = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: #f8f9fb;
-  z-index: 100;
-  border-bottom: 1px solid #eaeaea;
-  display: flex;
-  justify-content: center;
-`;
-
-const HeaderContent = styled.div`
-  width: 100%;
-  max-width: 1440px;
-  display: flex;
-  align-items: center;
-  padding: 10px 100px;
-  box-sizing: border-box;
-`;
-
-const BackButton = styled.div`
-  font-size: 24px;
-  cursor: pointer;
-  margin-right: 50px;
-`;
-
-const Title = styled.h1`
-  font-size: 15px;
-  font-weight: 500;
-  color: #111;
-  margin: 0;
-`;
-
-const ContentWrapper = styled.div`
-  width: 100%;
-  max-width: 1440px;
-  padding: 0 40px 40px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 1350px;
+  margin-top: 1rem;
 `;
 
 const SummaryCard = styled.div`
@@ -345,26 +265,6 @@ const RecordList = styled.div`
   gap: 16px;
 `;
 
-const RecordCard = styled.div`
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 16px 24px;
-  border: 1px solid #e2e8f0;
-`;
-
-const RecordTitle = styled.div`
-  font-size: 14px;
-  font-weight: bold;
-  color: #4b9cd3;
-  margin-bottom: 8px;
-`;
-
-const RecordContent = styled.p`
-  font-size: 14px;
-  color: #333;
-  line-height: 1.6;
-`;
-
 const TabWrapper = styled.div`
   display: flex;
   width: 100%;
@@ -408,133 +308,9 @@ const StatsSection = styled.div`
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 `;
 
-const EmotionStatList = styled.div`
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 90px;
-  margin-top: 16px;
-`;
-
-const EmotionStatItem = styled.div`
+const DigestCardList = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 60px;
-`;
-
-const EmojiText = styled.div`
-  font-size: 24px;
-`;
-
-const EmotionCount = styled.div`
-  font-size: 16px;
-  font-weight: bold;
-  color: #111;
-  margin-top: 8px;
-`;
-
-const EmotionLabel = styled.div`
-  font-size: 13px;
-  color: #666;
-  margin-top: 4px;
-`;
-
-const DiaryCard = styled.div`
-  background-color: #fff;
-  border-radius: 5px;
-  padding: 0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
-  margin-bottom: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 0px;
-  height: 232px;
-  overflow: hidden;
-`;
-
-const DiaryTopRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const DiaryLeftGroup = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const EmojiBox = styled.div`
-  font-size: 20px;
-`;
-
-const DiaryDate = styled.div`
-  font-size: 14px;
-  color: #333;
-`;
-
-const DiaryLocation = styled.div`
-  font-size: 13px;
-  color: #666;
-  text-align: right;
-  margin-right: 20px;
-`;
-
-const Divider = styled.hr`
+  gap: 24px;
   width: 100%;
-  border: none;
-  border-top: 1px solid #e2e8f0;
-  margin: 12px 0 0 0;
-  padding: 0;
-  display: block;
-`;
-
-const DiaryContentRow = styled.div`
-  display: flex;
-  gap: 30px;
-  align-items: flex-start;
-`;
-
-const DiaryImageBox = styled.div`
-  width: 258px;
-  height: 194px;
-  background-color: #f1f1f1;
-  border-radius: 0px;
-  overflow: hidden;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .no-image {
-    width: 100%;
-    height: 100%;
-    color: #aaa;
-    font-size: 14px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-`;
-
-const DiaryTextBlock = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-`;
-
-const DiaryPrompt = styled.div`
-  font-weight: 600;
-  font-size: 15px;
-  color: #4b9cd3;
-  margin-top: 30px;
-`;
-
-const DiaryPreview = styled.div`
-  font-size: 14px;
-  color: #333;
 `;

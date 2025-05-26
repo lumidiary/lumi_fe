@@ -4,7 +4,13 @@
 
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { BackHeader, Button, Card, Input } from '@components/common/index';
+import {
+  BackHeader,
+  Button,
+  Card,
+  Input,
+  ContentContainer,
+} from '@components/common/index';
 import { useState } from 'react';
 import {
   loginIdErrorMessage,
@@ -97,18 +103,6 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
-`;
-
-const ContentContainer = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-y: auto;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
 `;
 
 const Form = styled.div`

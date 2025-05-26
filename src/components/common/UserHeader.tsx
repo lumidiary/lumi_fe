@@ -13,7 +13,7 @@ const UserHeader = ({ username, profileImageUrl }: HeaderProps) => {
   const navigate = useNavigate();
 
   // 임시 - api 연동 시 삭제
-  username = 'test';
+  username = '';
   profileImageUrl = '';
 
   return (
@@ -42,7 +42,7 @@ const UserHeader = ({ username, profileImageUrl }: HeaderProps) => {
           <Button
             buttonText="회원가입"
             type="header_signup"
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/signup')}
           />
         </ButtonContainer>
       )}
@@ -53,6 +53,9 @@ const UserHeader = ({ username, profileImageUrl }: HeaderProps) => {
 export default UserHeader;
 
 const HeaderContainer = styled.header`
+  position: fixed;
+  top: 0;
+  left: 0;
   display: flex;
   width: 100%;
   align-items: center;
@@ -60,6 +63,7 @@ const HeaderContainer = styled.header`
   padding: 1.5rem 0;
   background-color: #fff;
   border-bottom: 1px solid #d9d9d9;
+  z-index: 10;
 `;
 
 const ButtonContainer = styled.header`

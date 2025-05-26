@@ -5,10 +5,14 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { BackHeader, Button, Card } from '@components/common/index';
+import {
+  BackHeader,
+  Button,
+  Card,
+  ContentContainer,
+} from '@components/common/index';
 import { ImageUrlsFromInputEvent } from '@utils/uploadImage';
-import LeftArrow from '@/assets/left_arrow.svg?react';
-import RightArrow from '@/assets/right_arrow.svg?react';
+import ImageFrame from '@components/ImageFrame';
 
 const DiaryImageUpload = () => {
   const [images, setImages] = useState<string[]>([]);
@@ -67,22 +71,12 @@ const DiaryImageUpload = () => {
           ) : (
             <ImagePreviewWrapper>
               <PreviewTitle>업로드된 사진 ({images.length}/4)</PreviewTitle>
-              <ImageFrame>
-                <ImageElement
-                  src={images[currentIndex]}
-                  alt={`uploaded-${currentIndex}`}
-                />
-                {currentIndex > 0 && (
-                  <ArrowButtonLeft onClick={handlePrev}>
-                    <LeftArrow />
-                  </ArrowButtonLeft>
-                )}
-                {currentIndex < images.length - 1 && (
-                  <ArrowButtonRight onClick={handleNext}>
-                    <RightArrow />
-                  </ArrowButtonRight>
-                )}
-              </ImageFrame>
+              <ImageFrame
+                images={images}
+                currentIndex={currentIndex}
+                onPrev={handlePrev}
+                onNext={handleNext}
+              />
               <PageIndicator>
                 {currentIndex + 1} / {images.length}
               </PageIndicator>
@@ -107,20 +101,6 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   height: 100%;
-`;
-
-const ContentContainer = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  gap: 2rem;
-  overflow-y: auto;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
 `;
 
 const StepOne = styled.div`
@@ -163,36 +143,6 @@ const PreviewTitle = styled.h2`
   font-weight: 500;
   margin-bottom: 2rem;
   align-self: flex-start;
-`;
-
-const ImageFrame = styled.div`
-  width: 100%;
-  height: 380px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  position: relative;
-  overflow: hidden;
-`;
-
-const ImageElement = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-`;
-
-const ArrowButtonLeft = styled.div`
-  position: absolute;
-  left: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-`;
-
-const ArrowButtonRight = styled(ArrowButtonLeft)`
-  left: auto;
-  right: 0.5rem;
 `;
 
 const PageIndicator = styled.div`
