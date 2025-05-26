@@ -1,40 +1,47 @@
 /*
- * 과거 일기 목록 페이지 (5)
+ * 과거 다이제스트 목록 페이지
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { BackHeader, ContentContainer } from '@components/common';
-import PostCard from '@components/PostCard';
-import { pastPosts } from '@constants/dummy';
-import { EmotionType } from '@/types/emotion';
+import DigestCard from '@components/DigestCard';
+import { pastDigests } from '@constants/dummy';
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 3;
 
-const DiaryList = () => {
+const DigestList = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  const totalPages = Math.ceil(pastPosts.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(pastDigests.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentItems = pastPosts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const currentItems = pastDigests.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <Container>
-      <BackHeader title="과거 일기 목록" />
+      <BackHeader title="과거 다이제스트 목록" />
       <ContentContainer>
         <Content>
-          <Grid>
-            {currentItems.map(post => (
-              <PostCard
-                key={post.id}
-                date={post.date}
-                emotion={post.emotion as EmotionType}
-                content={post.content}
-                postId={post.id}
-                imageUrl={post.imageUrl} // 이미지가 없을 경우 빈 문자열 처리
+          <CardColumn>
+            {currentItems.map(digest => (
+              <DigestCard
+                key={digest.id}
+                dateText={digest.dateText}
+                title={digest.title}
+                content={digest.content}
+                monthPath={digest.monthPath}
+                imageUrl={digest.imageUrl}
               />
             ))}
-          </Grid>
+          </CardColumn>
+
           <Pagination>
             {Array.from({ length: totalPages }, (_, i) => (
               <PageButton
@@ -52,7 +59,7 @@ const DiaryList = () => {
   );
 };
 
-export default DiaryList;
+export default DigestList;
 
 const Container = styled.div`
   display: flex;
@@ -64,13 +71,16 @@ const Container = styled.div`
 const Content = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 50px;
+  width: 100%;
+  padding: 0 17rem;
+  margin-top: 1rem;
 `;
 
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+const CardColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
 `;
 
 const Pagination = styled.div`
