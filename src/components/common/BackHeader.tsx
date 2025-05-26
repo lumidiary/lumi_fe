@@ -29,6 +29,9 @@ const BackHeader = ({ title }: HeaderProps) => {
 export default BackHeader;
 
 const HeaderContainer = styled.header`
+  position: fixed;
+  top: 0;
+  left: 0;
   display: flex;
   width: 100%;
   align-items: center;
@@ -36,6 +39,7 @@ const HeaderContainer = styled.header`
   padding: 1.5rem 0;
   background-color: #fff;
   border-bottom: 1px solid #d9d9d9;
+  z-index: 10;
 `;
 
 const Title = styled.div`

@@ -53,6 +53,9 @@ const UserHeader = ({ username, profileImageUrl }: HeaderProps) => {
 export default UserHeader;
 
 const HeaderContainer = styled.header`
+  position: fixed;
+  top: 0;
+  left: 0;
   display: flex;
   width: 100%;
   align-items: center;
