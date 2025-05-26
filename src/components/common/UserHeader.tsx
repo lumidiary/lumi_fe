@@ -42,7 +42,7 @@ const UserHeader = ({ username, profileImageUrl }: HeaderProps) => {
           <Button
             buttonText="회원가입"
             type="header_signup"
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/signup')}
           />
         </ButtonContainer>
       )}
