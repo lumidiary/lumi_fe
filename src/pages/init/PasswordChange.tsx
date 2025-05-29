@@ -15,14 +15,14 @@ import {
 import {
   validateEmail,
   validatePassword,
-  confirmPasswordMatch,
+  validateCode,
 } from '@/utils/validation';
 import {
   emailErrorMessage,
   emailAvailableMessage,
   emailCertifiedMessage,
   passwordErrorMessage,
-  passwordConfirmErrorMessage,
+  codeErrorMessage,
 } from '@/utils/validationMessages';
 import Logo from '@assets/logo.svg?react';
 
@@ -31,11 +31,11 @@ const PasswordChange = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [code, setCode] = useState('');
 
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [confirmError, setConfirmError] = useState('');
+  const [codeError, CodeError] = useState('');
 
   const [emailVerified, setEmailVerified] = useState(false);
 
@@ -62,18 +62,18 @@ const PasswordChange = () => {
       setEmailError('');
     }
 
+    if (!validateCode(code)) {
+      CodeError(codeErrorMessage);
+      valid = false;
+    } else {
+      CodeError('');
+    }
+
     if (!validatePassword(password)) {
       setPasswordError(passwordErrorMessage);
       valid = false;
     } else {
       setPasswordError('');
-    }
-
-    if (!confirmPasswordMatch(password, confirmPassword)) {
-      setConfirmError(passwordConfirmErrorMessage);
-      valid = false;
-    } else {
-      setConfirmError('');
     }
 
     if (valid) {
@@ -104,7 +104,16 @@ const PasswordChange = () => {
             </EmailRow>
             {emailError && <Message>{emailError}</Message>}
 
-            <Label>Password 설정</Label>
+            <Label>인증코드</Label>
+            <Input
+              type="number"
+              placeholder="인증코드를 입력하세요"
+              value={code}
+              onChange={e => setCode(e.target.value)}
+            />
+            {codeError && <Message>{codeError}</Message>}
+
+            <Label>새 Password 설정</Label>
             <Input
               type="password"
               placeholder="Password를 입력하세요"
@@ -112,16 +121,6 @@ const PasswordChange = () => {
               onChange={e => setPassword(e.target.value)}
             />
             {passwordError && <Message>{passwordError}</Message>}
-
-            <Label>Password 확인</Label>
-            <Input
-              type="password"
-              placeholder="Password를 다시 입력하세요"
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-            />
-            {confirmError && <Message>{confirmError}</Message>}
-
             <Button
               type="login"
               buttonText="비밀번호 변경"

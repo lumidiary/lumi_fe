@@ -12,11 +12,10 @@ export const validatePassword = (password: string): boolean => {
   return regex.test(password);
 };
 
-export const confirmPasswordMatch = (
-  password: string,
-  confirmPassword: string,
-): boolean => {
-  return password === confirmPassword;
+// code
+export const validateCode = (code: string): boolean => {
+  const regex = /^\d{6}$/; // 숫자만 (6자)
+  return regex.test(code);
 };
 
 //nickname

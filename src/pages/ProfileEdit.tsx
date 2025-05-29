@@ -12,56 +12,20 @@ import {
   Input,
   ContentContainer,
 } from '@components/common';
+import { validateYear, validateMonth, validateDay } from '@/utils/validation';
 import {
-  validateEmail,
-  validateNickname,
-  validateYear,
-  validateMonth,
-  validateDay,
-} from '@/utils/validation';
-import {
-  emailErrorMessage,
-  emailAvailableMessage,
-  emailRequiredMessage,
   nicknameErrorMessage,
-  nicknameAvailableMessage,
-  nicknameRequiredMessage,
   yearErrorMessage,
   monthErrorMessage,
   dayErrorMessage,
 } from '@/utils/validationMessages';
-import ProfilePhoto from '@components/ProfilePhoto';
+import Logo from '@assets/logo.svg?react';
 
 const ProfileEdit = () => {
   const navigate = useNavigate();
-  const [emailMessage, setEmailMessage] = useState('');
   const [nicknameMessage, setNicknameMessage] = useState('');
   const [birthMessage, setBirthMessage] = useState('');
-  const [emailChecked, setEmailChecked] = useState(false);
-  const [nicknameChecked, setNicknameChecked] = useState(false);
-
-  const handleEmailCheck = () => {
-    const email = (document.getElementById('email') as HTMLInputElement)?.value;
-    if (!validateEmail(email)) {
-      setEmailMessage(emailErrorMessage);
-      setEmailChecked(false);
-    } else {
-      setEmailMessage(emailAvailableMessage);
-      setEmailChecked(true);
-    }
-  };
-
-  const handleNicknameCheck = () => {
-    const nickname = (document.getElementById('nickname') as HTMLInputElement)
-      ?.value;
-    if (!validateNickname(nickname)) {
-      setNicknameMessage(nicknameErrorMessage);
-      setNicknameChecked(false);
-    } else {
-      setNicknameMessage(nicknameAvailableMessage);
-      setNicknameChecked(true);
-    }
-  };
+  const [nicknameChecked] = useState(false);
 
   const handleSignUp = () => {
     const year = parseInt(
@@ -76,13 +40,8 @@ const ProfileEdit = () => {
 
     let valid = true;
 
-    if (!emailChecked) {
-      setEmailMessage(emailRequiredMessage);
-      valid = false;
-    }
-
     if (!nicknameChecked) {
-      setNicknameMessage(nicknameRequiredMessage);
+      setNicknameMessage(nicknameErrorMessage);
       valid = false;
     }
 
@@ -110,28 +69,10 @@ const ProfileEdit = () => {
       <BackHeader title="프로필 수정" />
       <ContentContainer>
         <Card>
-          <ProfilePhoto />
+          <Logo />
           <Form>
-            <Label>Email</Label>
-            <Row>
-              <Input id="email" placeholder="Email을 입력하세요" />
-              <Button
-                type="request"
-                buttonText="중복확인"
-                onClick={handleEmailCheck}
-              />
-            </Row>
-            {emailMessage && <Message>{emailMessage}</Message>}
-
             <Label>Nickname</Label>
-            <Row>
-              <Input id="nickname" placeholder="닉네임을 입력하세요" />
-              <Button
-                type="request"
-                buttonText="중복확인"
-                onClick={handleNicknameCheck}
-              />
-            </Row>
+            <Input id="nickname" placeholder="닉네임을 입력하세요" />
             {nicknameMessage && <Message>{nicknameMessage}</Message>}
 
             <Label>생년월일</Label>
@@ -183,6 +124,7 @@ const Form = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  margin-top: 2rem;
 `;
 
 const Label = styled.label`
@@ -190,13 +132,6 @@ const Label = styled.label`
   font-weight: 500;
   margin-bottom: 0.3rem;
   margin-top: 1rem;
-`;
-
-const Row = styled.div`
-  display: flex;
-  align-items: center;
-  width: 100%;
-  gap: 0.5rem;
 `;
 
 const BirthRow = styled.div`

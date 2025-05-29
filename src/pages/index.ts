@@ -13,3 +13,4 @@ export { default as Digest } from './Digest';
 export { default as DigestList } from './DigestList';
 export { default as Settings } from './Settings';
 export { default as ProfileEdit } from './ProfileEdit';
+export { default as ProfileImage } from './ProfileImage';

@@ -21,19 +21,19 @@ import Logo from '@assets/logo.svg?react';
 const Login = () => {
   const navigate = useNavigate();
 
-  const [userId, setUserId] = useState('');
+  const [email, setEmailId] = useState('');
   const [password, setPassword] = useState('');
-  const [idError, setIdError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
   const handleLogin = () => {
     let valid = true;
 
-    if (!userId.trim()) {
-      setIdError(loginIdErrorMessage);
+    if (!email.trim()) {
+      setEmailError(loginIdErrorMessage);
       valid = false;
     } else {
-      setIdError('');
+      setEmailError('');
     }
 
     if (!password) {
@@ -44,7 +44,7 @@ const Login = () => {
     }
 
     if (valid) {
-      if (userId === 'gachon@gmail.com' && password === 'gachon123!') {
+      if (email === 'gachon@gmail.com' && password === 'gachon123!') {
         console.log('로그인 성공');
         navigate('/');
       } else {
@@ -63,10 +63,10 @@ const Login = () => {
             <Label>ID</Label>
             <Input
               placeholder="ID를 입력하세요"
-              value={userId}
-              onChange={e => setUserId(e.target.value)}
+              value={email}
+              onChange={e => setEmailId(e.target.value)}
             />
-            {idError && <Message>{idError}</Message>}
+            {emailError && <Message>{emailError}</Message>}
 
             <Label>Password</Label>
             <Input

@@ -1,3 +1,7 @@
+/*
+ * 프로필 이미지 업로드
+ */
+
 import { useRef, useState } from 'react';
 import styled from 'styled-components';
 import { FiPlus } from 'react-icons/fi';

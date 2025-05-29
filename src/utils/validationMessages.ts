@@ -6,7 +6,7 @@ export const emailCertifiedMessage = '이메일 인증을 완료해주세요.';
 export const passwordErrorMessage =
   '비밀번호는 8자 이상이며, 영문, 숫자, 특수문자를 모두 포함해야 합니다.';
 
-export const passwordConfirmErrorMessage = '비밀번호가 일치하지 않습니다.';
+export const codeErrorMessage = '인증코드를 입력해주세요';
 
 export const nicknameErrorMessage = '닉네임을 한 글자 이상 입력해주세요.';
 export const nicknameRequiredMessage = '닉네임 중복확인을 진행해주세요.';

@@ -16,7 +16,6 @@ import {
   validateEmail,
   validateNickname,
   validatePassword,
-  confirmPasswordMatch,
   validateYear,
   validateMonth,
   validateDay,
@@ -29,19 +28,17 @@ import {
   nicknameAvailableMessage,
   nicknameRequiredMessage,
   passwordErrorMessage,
-  passwordConfirmErrorMessage,
   yearErrorMessage,
   monthErrorMessage,
   dayErrorMessage,
 } from '@/utils/validationMessages';
-import ProfilePhoto from '@components/ProfilePhoto';
+import Logo from '@assets/logo.svg?react';
 
 const SignUp = () => {
   const navigate = useNavigate();
   const [emailMessage, setEmailMessage] = useState('');
   const [nicknameMessage, setNicknameMessage] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
-  const [passwordConfirmMessage, setPasswordConfirmMessage] = useState('');
   const [birthMessage, setBirthMessage] = useState('');
   const [emailChecked, setEmailChecked] = useState(false);
   const [nicknameChecked, setNicknameChecked] = useState(false);
@@ -72,9 +69,6 @@ const SignUp = () => {
   const handleSignUp = () => {
     const password = (document.getElementById('password') as HTMLInputElement)
       ?.value;
-    const confirmPassword = (
-      document.getElementById('confirmPassword') as HTMLInputElement
-    )?.value;
     const year = parseInt(
       (document.getElementById('year') as HTMLInputElement)?.value,
     );
@@ -104,13 +98,6 @@ const SignUp = () => {
       setPasswordMessage('');
     }
 
-    if (!confirmPasswordMatch(password, confirmPassword)) {
-      setPasswordConfirmMessage(passwordConfirmErrorMessage);
-      valid = false;
-    } else {
-      setPasswordConfirmMessage('');
-    }
-
     if (!validateYear(year)) {
       setBirthMessage(yearErrorMessage);
       valid = false;
@@ -135,7 +122,7 @@ const SignUp = () => {
       <BackHeader title="회원가입" />
       <ContentContainer>
         <Card>
-          <ProfilePhoto />
+          <Logo />
           <Form>
             <Label>Email</Label>
             <Row>
@@ -155,16 +142,6 @@ const SignUp = () => {
               placeholder="Password를 입력하세요"
             />
             {passwordMessage && <Message>{passwordMessage}</Message>}
-
-            <Label>Password 확인</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="Password를 다시 입력하세요"
-            />
-            {passwordConfirmMessage && (
-              <Message>{passwordConfirmMessage}</Message>
-            )}
 
             <Label>Nickname</Label>
             <Row>
@@ -226,6 +203,7 @@ const Form = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  margin-top: 2rem;
 `;
 
 const Label = styled.label`
