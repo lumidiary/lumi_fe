@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import KakaoMap from '@/components/KakaoMap';
 import { BackHeader, ContentContainer } from '@components/common';
@@ -12,23 +11,11 @@ import {
 
 const Digest = () => {
   const [activeTab, setActiveTab] = useState<'diary' | 'stats'>('diary');
-  const [digestSummary, setDigestSummary] = useState<any>({
-    topEmoji: '',
-    summaryEmotion: '',
-    diaryCount: 0,
-    summaryText: '',
-    emotionStats: [
-      { emoji: '😊', count: 0, label: '행복' },
-      { emoji: '😁', count: 0, label: '기쁨' },
-      { emoji: '😐', count: 0, label: '보통' },
-      { emoji: '😠', count: 0, label: '화남' },
-      { emoji: '😭', count: 0, label: '슬픔' },
-    ],
-  });
+  const [digestData, setDigestData] = useState<any>(null);
   const [records, setRecords] = useState<any[]>([]);
-  const [diaries, setDiaries] = useState<any[]>([]);
-  const navigate = useNavigate();
-  const { month } = useParams();
+  const [detailedDiaries, setDetailedDiaries] = useState<any[]>([]);
+  const { month, digestId } = useParams();
+
   const yearMonthText = (() => {
     if (!month) return '날짜 없음';
     const [year, m] = month.split('-');
@@ -41,34 +28,59 @@ const Digest = () => {
     const fetchDigest = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5173/digests/monthly?month=${month}`,
+          `http://localhost:8080/core/digests/${digestId}`,
         );
         const data = await res.json();
-        setDigestSummary(data);
-        setRecords(data.records || []);
+        setDigestData(data);
+        setRecords([
+          { title: '이번 달 활동', content: data.activity },
+          { title: '이번 달 감정', content: data.emotionTrend },
+          { title: '이번 달 특별했던 순간', content: data.specialMoment },
+        ]);
+
+        const detailed = await Promise.all(
+          data.entries.slice(0, 3).map(async (entry: any) => {
+            const [diaryRes, imageRes] = await Promise.all([
+              fetch(`/core/diaries/${entry.diaryId}`).then(r => r.json()),
+              fetch(`/core/images/session/${entry.diaryId}`).then(r =>
+                r.json(),
+              ),
+            ]);
+
+            return {
+              ...entry,
+              imageUrl: imageRes.imgPars?.[0]?.accessUri || '',
+              prompt: diaryRes.questions?.[0]?.question || '',
+              answer: diaryRes.questions?.[0]?.answer || '',
+              capturedAt: diaryRes.capturedAt,
+              address: diaryRes.address,
+            };
+          }),
+        );
+
+        setDetailedDiaries(detailed);
       } catch (err) {
         console.error('다이제스트 불러오기 실패:', err);
-        setRecords([
-          { title: '이번 달 활동', content: '' },
-          { title: '이번 달 감정', content: '' },
-          { title: '이번 달 특별했던 순간', content: '' },
-        ]);
-      }
-    };
-
-    const fetchDiaries = async () => {
-      try {
-        const res = await fetch('http://localhost:5173/diaries?size=3');
-        const data = await res.json();
-        setDiaries(data.content || []);
-      } catch (err) {
-        console.error('일기 리스트 불러오기 실패:', err);
       }
     };
 
     fetchDigest();
-    fetchDiaries();
-  }, []);
+  }, [digestId]);
+
+  const places =
+    digestData?.entries?.map((entry: any) => ({
+      lat: entry.latitude,
+      lng: entry.longitude,
+      placeName: entry.summary,
+    })) || [];
+
+  const defaultEmotionStats = [
+    { emoji: '😊', count: 0, label: '행복' },
+    { emoji: '😁', count: 0, label: '기쁨' },
+    { emoji: '😐', count: 0, label: '보통' },
+    { emoji: '😠', count: 0, label: '화남' },
+    { emoji: '😭', count: 0, label: '슬픔' },
+  ];
 
   return (
     <Container>
@@ -82,21 +94,19 @@ const Digest = () => {
                 <CardTitle>{yearMonthText} 다이제스트</CardTitle>
               </TitleBox>
             </CardTopBackground>
-
             <EmotionBlock>
               <EmotionRow>
-                <Emoji>{digestSummary?.topEmoji || '😊'}</Emoji>
+                <Emoji>{digestData?.overallEmotion || '😊'}</Emoji>
                 <BoldText>
-                  {digestSummary?.summaryEmotion ||
-                    '이번 달은 행복한 달이었어요!'}
+                  {digestData?.summaryEmotion || '이번 달은 행복한 달이었어요!'}
                 </BoldText>
               </EmotionRow>
               <DescText>
-                총 {digestSummary?.diaryCount || 0}회의 일기를 작성했습니다.
+                총 {digestData?.entries?.length || 0}회의 일기를 작성했습니다.
               </DescText>
-              {digestSummary?.summaryText && (
+              {digestData?.summary && (
                 <DescText style={{ marginTop: '8px', whiteSpace: 'pre-line' }}>
-                  {digestSummary.summaryText}
+                  {digestData.summary}
                 </DescText>
               )}
             </EmotionBlock>
@@ -105,17 +115,14 @@ const Digest = () => {
           <RecordSection>
             <SectionTitle>AI가 분석한 이번 달의 기록</SectionTitle>
             <RecordList>
-              {[0, 1, 2].map(i => {
-                const r = records[i] || {};
-                return (
-                  <DigestRecordCard
-                    key={i}
-                    index={i}
-                    title={r.title}
-                    content={r.content}
-                  />
-                );
-              })}
+              {[0, 1, 2].map(i => (
+                <DigestRecordCard
+                  key={i}
+                  index={i}
+                  title={records[i]?.title || `제목 없음 ${i + 1}`}
+                  content={records[i]?.content || '아직 내용이 없습니다.'}
+                />
+              ))}
             </RecordList>
           </RecordSection>
 
@@ -137,10 +144,27 @@ const Digest = () => {
           <TabContent>
             {activeTab === 'diary' && (
               <DigestCardList>
-                {[0, 1, 2].map(i => {
-                  const diary = diaries[i] || {};
-                  return <DigestDiaryCard key={i} diary={diary} />;
-                })}
+                {detailedDiaries.length > 0
+                  ? detailedDiaries.map((diary, i) => (
+                      <DigestDiaryCard key={i} diary={diary} />
+                    ))
+                  : Array(3)
+                      .fill(null)
+                      .map((_, i) => (
+                        <DigestDiaryCard
+                          key={i}
+                          diary={{
+                            diaryId: '',
+                            summary: '내용 없음',
+                            emotion: '',
+                            capturedAt: '',
+                            imageUrl: '',
+                            prompt: '',
+                            answer: '',
+                            address: '',
+                          }}
+                        />
+                      ))}
               </DigestCardList>
             )}
 
@@ -148,12 +172,14 @@ const Digest = () => {
               <>
                 <StatsSection>
                   <SectionTitle>이번 달 감정 통계</SectionTitle>
-                  <EmotionStatList stats={digestSummary?.emotionStats || []} />
+                  <EmotionStatList
+                    stats={digestData?.emotionStats || defaultEmotionStats}
+                  />
                 </StatsSection>
 
                 <StatsSection>
                   <SectionTitle>이번 달 방문한 장소</SectionTitle>
-                  <KakaoMap places={digestSummary?.places || []} />
+                  <KakaoMap places={places} />
                 </StatsSection>
               </>
             )}

@@ -2,18 +2,18 @@ import styled from 'styled-components';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 import { LuCalendar } from 'react-icons/lu';
 
-interface DiaryProps {
-  diary: {
-    emotion?: string;
-    date?: string;
-    location?: string;
-    imageUrl?: string;
-    prompt?: string;
-    preview?: string;
-  };
+export interface DiaryData {
+  diaryId: string;
+  capturedAt: string;
+  emotion: string;
+  imageUrl: string;
+  summary: string;
+  prompt: string;
+  answer: string;
+  address: string;
 }
 
-const DigestDiaryCard = ({ diary }: DiaryProps) => {
+const DigestDiaryCard = ({ diary }: { diary: DiaryData }) => {
   return (
     <DiaryCard>
       <DiaryTopRow>
@@ -24,12 +24,12 @@ const DigestDiaryCard = ({ diary }: DiaryProps) => {
               size={16}
               style={{ color: '#757575', marginRight: '4px' }}
             />
-            {diary.date || 'No Date'}
+            {diary.capturedAt || 'No Date'}
           </DiaryDate>
         </DiaryLeftGroup>
         <DiaryLocation>
           <FaMapMarkerAlt size={16} style={{ marginRight: '4px' }} />
-          {diary.location || 'No Place'}
+          {diary.address || 'No Place'}
         </DiaryLocation>
       </DiaryTopRow>
       <Divider />
@@ -43,7 +43,7 @@ const DigestDiaryCard = ({ diary }: DiaryProps) => {
         </DiaryImageBox>
         <DiaryTextBlock>
           <DiaryPrompt>{diary.prompt || 'No Question'}</DiaryPrompt>
-          <DiaryPreview>{diary.preview || 'No Content'}</DiaryPreview>
+          <DiaryPreview>{diary.answer || 'No Content'}</DiaryPreview>
         </DiaryTextBlock>
       </DiaryContentRow>
     </DiaryCard>
