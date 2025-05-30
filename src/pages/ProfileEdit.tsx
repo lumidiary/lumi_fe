@@ -20,14 +20,14 @@ import {
   dayErrorMessage,
 } from '@/utils/validationMessages';
 import Logo from '@assets/logo.svg?react';
+import { requestPutFetch } from '@services/apiService';
 
 const ProfileEdit = () => {
   const navigate = useNavigate();
   const [nicknameMessage, setNicknameMessage] = useState('');
   const [birthMessage, setBirthMessage] = useState('');
-  const [nicknameChecked] = useState(false);
 
-  const handleSignUp = () => {
+  const handleEdit = async () => {
     const year = parseInt(
       (document.getElementById('year') as HTMLInputElement)?.value,
     );
@@ -37,12 +37,17 @@ const ProfileEdit = () => {
     const day = parseInt(
       (document.getElementById('day') as HTMLInputElement)?.value,
     );
+    const nickname = (
+      document.getElementById('nickname') as HTMLInputElement
+    )?.value.trim();
 
     let valid = true;
 
-    if (!nicknameChecked) {
+    if (!nickname) {
       setNicknameMessage(nicknameErrorMessage);
       valid = false;
+    } else {
+      setNicknameMessage('');
     }
 
     if (!validateYear(year)) {
@@ -58,9 +63,24 @@ const ProfileEdit = () => {
       setBirthMessage('');
     }
 
-    if (valid) {
-      console.log('프로필 수정');
+    if (!valid) return;
+
+    const birthDate = `${year.toString().padStart(4, '0')}-${month
+      .toString()
+      .padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+    const data = {
+      name: nickname,
+      birthDate,
+      theme: 'LIGHT',
+    };
+
+    try {
+      await requestPutFetch('users/profile', data, 'tokenAndUserId');
+      alert('프로필이 성공적으로 수정되었습니다.');
       navigate('/settings', { replace: true });
+    } catch (error: any) {
+      alert(`프로필 수정 실패: ${error?.message || error}`);
     }
   };
 
@@ -101,7 +121,7 @@ const ProfileEdit = () => {
             <Button
               type="login"
               buttonText="프로필 수정"
-              onClick={handleSignUp}
+              onClick={handleEdit}
               style={{ marginTop: '3rem' }}
             />
           </Form>
