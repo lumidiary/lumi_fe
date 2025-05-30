@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 interface ButtonProps {
@@ -17,6 +17,7 @@ interface ButtonProps {
   style?: React.CSSProperties;
   bgColor?: string;
   txtColor?: string;
+  isToggled?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ interface ButtonProps {
  * bgColor: 버튼 배경색 (선택적)
  * @param  onClick () => void (onClick method)
  * @param isDisabled boolean (disabled status)
+ * isToggled: 인증요청 버튼 색상 변경 여부 (외부에서 제어)
  */
 
 const Button = ({
@@ -38,24 +40,21 @@ const Button = ({
   style,
   bgColor,
   txtColor,
+  isToggled,
 }: ButtonProps) => {
-  const [toggled, setToggled] = useState(false);
-
   const handleClick = () => {
-    if (type === 'request') {
-      setToggled(prev => !prev);
-    }
     if (onClick) onClick();
   };
+
   return (
     <ButtonContainer
-      className={`button ${type} ${className}`}
+      className={`button ${type ?? ''} ${className}`}
       onClick={handleClick}
       disabled={isDisabled}
       style={style}
       bgColor={bgColor}
       txtColor={txtColor}
-      toggled={toggled}
+      toggled={isToggled}
     >
       {buttonText}
     </ButtonContainer>
@@ -119,6 +118,7 @@ const ButtonContainer = styled.button<{
     padding: 0.4rem 0.8rem;
     font-size: 0.8rem;
   }
+
   &.header_login {
     background-color: #fff;
     color: #000;

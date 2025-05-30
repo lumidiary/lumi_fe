@@ -26,7 +26,7 @@ const Login = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     let valid = true;
 
     if (!email.trim()) {
@@ -43,13 +43,39 @@ const Login = () => {
       setPasswordError('');
     }
 
-    if (valid) {
-      if (email === 'gachon@gmail.com' && password === 'gachon123!') {
-        console.log('로그인 성공');
-        navigate('/');
-      } else {
-        setPasswordError('아이디 또는 비밀번호가 일치하지 않습니다.');
+    if (!valid) return;
+
+    // response는 custom wrapper라 헤더 접근 불가 → apiService 미사용
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/users/login`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
       }
+
+      const token = response.headers.get('token');
+      const userId = response.headers.get('userId');
+
+      if (!token || !userId) {
+        throw new Error('응답 헤더에 token 또는 userId가 없습니다.');
+      }
+
+      localStorage.setItem('accessToken', token);
+      localStorage.setItem('userId', userId);
+
+      navigate('/');
+    } catch (error) {
+      console.error('로그인 에러:', error);
+      setPasswordError('아이디 또는 비밀번호가 일치하지 않습니다.');
     }
   };
 

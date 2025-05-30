@@ -2,8 +2,8 @@
  * 회원가입 페이지 (3)
  */
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import {
   BackHeader,
@@ -14,7 +14,6 @@ import {
 } from '@components/common';
 import {
   validateEmail,
-  validateNickname,
   validatePassword,
   validateYear,
   validateMonth,
@@ -22,53 +21,99 @@ import {
 } from '@/utils/validation';
 import {
   emailErrorMessage,
-  emailAvailableMessage,
   emailRequiredMessage,
   nicknameErrorMessage,
-  nicknameAvailableMessage,
-  nicknameRequiredMessage,
   passwordErrorMessage,
   yearErrorMessage,
   monthErrorMessage,
   dayErrorMessage,
 } from '@/utils/validationMessages';
 import Logo from '@assets/logo.svg?react';
+import { parseJwt } from '@/utils/parseJwt';
+import { requestPostFetch } from '@services/apiService';
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [emailMessage, setEmailMessage] = useState('');
   const [nicknameMessage, setNicknameMessage] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
   const [birthMessage, setBirthMessage] = useState('');
   const [emailChecked, setEmailChecked] = useState(false);
-  const [nicknameChecked, setNicknameChecked] = useState(false);
+  const [isVerifiedFromToken, setIsVerifiedFromToken] = useState(false);
+  const [verifyTokenState, setVerifyTokenState] = useState<string | null>(null);
+  const [emailToggled, setEmailToggled] = useState(false);
+  const [signUpErrorMessage, setSignUpErrorMessage] = useState('');
 
-  const handleEmailCheck = () => {
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('verifyToken');
+
+    if (token) {
+      const payload = parseJwt(token);
+      const emailFromToken = payload?.sub;
+
+      if (emailFromToken) {
+        const emailInput = document.getElementById('email') as HTMLInputElement;
+        if (emailInput) emailInput.value = emailFromToken;
+      }
+
+      setVerifyTokenState(token);
+      setIsVerifiedFromToken(true);
+      setEmailChecked(true);
+      setEmailMessage('이메일 인증이 완료되었습니다.');
+    }
+  }, [location.search]);
+
+  const handleEmailCheck = async () => {
     const email = (document.getElementById('email') as HTMLInputElement)?.value;
+
     if (!validateEmail(email)) {
       setEmailMessage(emailErrorMessage);
       setEmailChecked(false);
-    } else {
-      setEmailMessage(emailAvailableMessage);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/users/email/verify`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('이메일 인증 요청 실패');
+      }
+
+      const result = await response.text();
+      setEmailMessage(
+        result || '인증 메일이 발송되었습니다. 메일함을 확인해주세요.',
+      );
       setEmailChecked(true);
+
+      if (!emailToggled) {
+        setEmailToggled(true);
+      }
+    } catch (error) {
+      console.error('이메일 인증 요청 실패:', error);
+      setEmailMessage('이메일 인증 요청 중 오류가 발생했습니다.');
+      setEmailChecked(false);
     }
   };
 
-  const handleNicknameCheck = () => {
-    const nickname = (document.getElementById('nickname') as HTMLInputElement)
-      ?.value;
-    if (!validateNickname(nickname)) {
-      setNicknameMessage(nicknameErrorMessage);
-      setNicknameChecked(false);
-    } else {
-      setNicknameMessage(nicknameAvailableMessage);
-      setNicknameChecked(true);
-    }
-  };
-
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
+    const email = (document.getElementById('email') as HTMLInputElement)?.value;
     const password = (document.getElementById('password') as HTMLInputElement)
       ?.value;
+    const name = (document.getElementById('nickname') as HTMLInputElement)
+      ?.value;
+
     const year = parseInt(
       (document.getElementById('year') as HTMLInputElement)?.value,
     );
@@ -86,9 +131,11 @@ const SignUp = () => {
       valid = false;
     }
 
-    if (!nicknameChecked) {
-      setNicknameMessage(nicknameRequiredMessage);
+    if (!name) {
+      setNicknameMessage(nicknameErrorMessage);
       valid = false;
+    } else {
+      setNicknameMessage('');
     }
 
     if (!validatePassword(password)) {
@@ -111,9 +158,27 @@ const SignUp = () => {
       setBirthMessage('');
     }
 
-    if (valid) {
-      console.log('회원가입 요청');
-      navigate('/login');
+    if (!valid) return;
+
+    const birthDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const requestBody = {
+      email,
+      pwd: password,
+      name,
+      birthDate,
+      token: verifyTokenState,
+    };
+
+    console.log('회원가입 요청 데이터:', requestBody);
+
+    try {
+      await requestPostFetch('/users/signup', requestBody, 'none');
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('회원가입 실패:', error);
+      setSignUpErrorMessage(
+        '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.',
+      );
     }
   };
 
@@ -126,11 +191,18 @@ const SignUp = () => {
           <Form>
             <Label>Email</Label>
             <Row>
-              <Input id="email" placeholder="Email을 입력하세요" />
+              <Input
+                id="email"
+                placeholder="Email을 입력하세요"
+                disabled={isVerifiedFromToken}
+                readOnly={isVerifiedFromToken}
+              />
               <Button
                 type="request"
-                buttonText="중복확인"
+                buttonText="인증요청"
                 onClick={handleEmailCheck}
+                isDisabled={isVerifiedFromToken}
+                isToggled={emailToggled}
               />
             </Row>
             {emailMessage && <Message>{emailMessage}</Message>}
@@ -144,14 +216,7 @@ const SignUp = () => {
             {passwordMessage && <Message>{passwordMessage}</Message>}
 
             <Label>Nickname</Label>
-            <Row>
-              <Input id="nickname" placeholder="닉네임을 입력하세요" />
-              <Button
-                type="request"
-                buttonText="중복확인"
-                onClick={handleNicknameCheck}
-              />
-            </Row>
+            <Input id="nickname" placeholder="닉네임을 입력하세요" />
             {nicknameMessage && <Message>{nicknameMessage}</Message>}
 
             <Label>생년월일</Label>
@@ -176,6 +241,7 @@ const SignUp = () => {
               />
             </BirthRow>
             {birthMessage && <Message>{birthMessage}</Message>}
+            {signUpErrorMessage && <Message>{signUpErrorMessage}</Message>}
 
             <Button
               type="login"

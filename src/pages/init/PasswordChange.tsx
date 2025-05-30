@@ -2,8 +2,8 @@
  * 비밀번호 찾기(변경) 페이지 (2)
  */
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import {
   BackHeader,
@@ -11,74 +11,139 @@ import {
   Card,
   Input,
   ContentContainer,
-} from '@components/common/index';
-import {
-  validateEmail,
-  validatePassword,
-  validateCode,
-} from '@/utils/validation';
+} from '@components/common';
+import { validateEmail, validatePassword } from '@/utils/validation';
 import {
   emailErrorMessage,
-  emailAvailableMessage,
-  emailCertifiedMessage,
+  emailRequiredMessage,
   passwordErrorMessage,
-  codeErrorMessage,
 } from '@/utils/validationMessages';
 import Logo from '@assets/logo.svg?react';
+import { parseJwt } from '@/utils/parseJwt';
 
 const PasswordChange = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [code, setCode] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [submitErrorMessage, setSubmitErrorMessage] = useState('');
+  const [emailChecked, setEmailChecked] = useState(false);
+  const [isVerifiedFromToken, setIsVerifiedFromToken] = useState(false);
+  const [verifyTokenState, setVerifyTokenState] = useState<string | null>(null);
+  const [emailToggled, setEmailToggled] = useState(false);
 
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [codeError, CodeError] = useState('');
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('verifyToken');
 
-  const [emailVerified, setEmailVerified] = useState(false);
+    if (token) {
+      const payload = parseJwt(token);
+      const emailFromToken = payload?.sub;
 
-  const handleEmailVerify = () => {
+      if (emailFromToken) {
+        const emailInput = document.getElementById('email') as HTMLInputElement;
+        if (emailInput) emailInput.value = emailFromToken;
+      }
+
+      setVerifyTokenState(token);
+      setIsVerifiedFromToken(true);
+      setEmailChecked(true);
+      setEmailMessage('이메일 인증이 완료되었습니다.');
+    }
+  }, [location.search]);
+
+  const handleEmailCheck = async () => {
+    const email = (document.getElementById('email') as HTMLInputElement)?.value;
+
     if (!validateEmail(email)) {
-      setEmailError(emailErrorMessage);
-      setEmailVerified(false);
-    } else {
-      setEmailError(emailAvailableMessage);
-      setEmailVerified(true);
+      setEmailMessage(emailErrorMessage);
+      setEmailChecked(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/users/password-reset/request`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('이메일 인증 요청 실패');
+      }
+
+      const result = await response.text();
+      setEmailMessage(
+        result || '인증 메일이 발송되었습니다. 메일함을 확인해주세요.',
+      );
+      setEmailChecked(true);
+
+      if (!emailToggled) {
+        setEmailToggled(true);
+      }
+    } catch (error) {
+      console.error('이메일 인증 요청 실패:', error);
+      setEmailMessage('이메일 인증 요청 중 오류가 발생했습니다.');
+      setEmailChecked(false);
     }
   };
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
+    const password = (document.getElementById('password') as HTMLInputElement)
+      ?.value;
+
     let valid = true;
 
-    if (!validateEmail(email)) {
-      setEmailError(emailErrorMessage);
+    if (!emailChecked) {
+      setEmailMessage(emailRequiredMessage);
       valid = false;
-    } else if (!emailVerified) {
-      setEmailError(emailCertifiedMessage);
-      valid = false;
-    } else {
-      setEmailError('');
-    }
-
-    if (!validateCode(code)) {
-      CodeError(codeErrorMessage);
-      valid = false;
-    } else {
-      CodeError('');
     }
 
     if (!validatePassword(password)) {
-      setPasswordError(passwordErrorMessage);
+      setPasswordMessage(passwordErrorMessage);
       valid = false;
     } else {
-      setPasswordError('');
+      setPasswordMessage('');
     }
 
-    if (valid) {
-      console.log('비밀번호 변경 요청');
-      navigate('/login');
+    if (!verifyTokenState) {
+      setSubmitErrorMessage('토큰이 유효하지 않습니다.');
+      valid = false;
+    }
+
+    if (!valid) return;
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/users/password-reset/confirm`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: verifyTokenState,
+            newPassword: password,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('비밀번호 변경 실패:', error);
+      setSubmitErrorMessage(
+        '비밀번호 변경 중 오류가 발생했습니다. 다시 시도해주세요.',
+      );
     }
   };
 
@@ -92,35 +157,30 @@ const PasswordChange = () => {
             <Label>Email</Label>
             <EmailRow>
               <Input
+                id="email"
                 placeholder="Email을 입력하세요"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                disabled={isVerifiedFromToken}
+                readOnly={isVerifiedFromToken}
               />
               <Button
                 type="request"
                 buttonText="인증요청"
-                onClick={handleEmailVerify}
+                onClick={handleEmailCheck}
+                isDisabled={isVerifiedFromToken}
+                isToggled={emailToggled}
               />
             </EmailRow>
-            {emailError && <Message>{emailError}</Message>}
-
-            <Label>인증코드</Label>
-            <Input
-              type="number"
-              placeholder="인증코드를 입력하세요"
-              value={code}
-              onChange={e => setCode(e.target.value)}
-            />
-            {codeError && <Message>{codeError}</Message>}
+            {emailMessage && <Message>{emailMessage}</Message>}
 
             <Label>새 Password 설정</Label>
             <Input
+              id="password"
               type="password"
               placeholder="Password를 입력하세요"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
             />
-            {passwordError && <Message>{passwordError}</Message>}
+            {passwordMessage && <Message>{passwordMessage}</Message>}
+            {submitErrorMessage && <Message>{submitErrorMessage}</Message>}
+
             <Button
               type="login"
               buttonText="비밀번호 변경"
