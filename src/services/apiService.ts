@@ -5,14 +5,34 @@ const requestFetch = async (
   url: string,
   method: string,
   data?: object,
-  option?: Record<string, string>,
+  optionType: 'none' | 'tokenOnly' | 'tokenAndUserId' = 'tokenOnly',
+  extraHeaders?: Record<string, string>,
 ) => {
   const token = localStorage.getItem('accessToken') || '';
-  const headers = new Headers({
-    Authorization: `Bearer ${token}`,
+  const userId = localStorage.getItem('userId') || '';
+
+  const baseHeaders: Record<string, string> = {
     Accept: '*/*',
-    ...(data ? { 'Content-Type': 'application/json' } : {}),
-    ...option,
+  };
+
+  if (data && !(data instanceof FormData)) {
+    baseHeaders['Content-Type'] = 'application/json';
+  }
+
+  if (data) baseHeaders['Content-Type'] = 'application/json';
+
+  if (optionType === 'tokenOnly') {
+    baseHeaders.token = token;
+  }
+
+  if (optionType === 'tokenAndUserId') {
+    baseHeaders.token = token;
+    baseHeaders.userId = userId;
+  }
+
+  const headers = new Headers({
+    ...baseHeaders,
+    ...extraHeaders,
   });
 
   const fullUrl = `${API_URL.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
@@ -28,6 +48,10 @@ const requestFetch = async (
       throw new Error(`HTTP error ${response.status}`);
     }
 
+    if (response.status === 204) {
+      return null;
+    }
+
     return await response.json();
   } catch (err) {
     console.error('Fetch error:', err);
@@ -36,32 +60,44 @@ const requestFetch = async (
 };
 
 // POST 요청
-export const requestPostFetch = async (url: string, data: object) => {
-  return await requestFetch(url, 'POST', data, {
-    'Content-Type': 'application/json',
-  });
+export const requestPostFetch = (
+  url: string,
+  data: object,
+  optionType?: 'none' | 'tokenOnly' | 'tokenAndUserId',
+) => {
+  return requestFetch(url, 'POST', data, optionType);
 };
 
 // PUT 요청
-export const requestPutFetch = async (url: string, data: object) => {
-  return await requestFetch(url, 'PUT', data, {
-    'Content-Type': 'application/json',
-  });
+export const requestPutFetch = (
+  url: string,
+  data: object,
+  optionType?: 'none' | 'tokenOnly' | 'tokenAndUserId',
+) => {
+  return requestFetch(url, 'PUT', data, optionType);
 };
 
 // GET 요청
-export const requestGetFetch = async (url: string) => {
-  return await requestFetch(url, 'GET');
+export const requestGetFetch = (
+  url: string,
+  optionType?: 'none' | 'tokenOnly' | 'tokenAndUserId',
+) => {
+  return requestFetch(url, 'GET', undefined, optionType);
 };
 
 // DELETE 요청
-export const requestDeleteFetch = async (url: string) => {
-  return await requestFetch(url, 'DELETE');
+export const requestDeleteFetch = (
+  url: string,
+  optionType?: 'none' | 'tokenOnly' | 'tokenAndUserId',
+) => {
+  return requestFetch(url, 'DELETE', undefined, optionType);
 };
 
 // PATCH 요청
-export const requestPatchFetch = async (url: string, data: object) => {
-  return await requestFetch(url, 'PATCH', data, {
-    'Content-Type': 'application/json',
-  });
+export const requestPatchFetch = (
+  url: string,
+  data: object,
+  optionType?: 'none' | 'tokenOnly' | 'tokenAndUserId',
+) => {
+  return requestFetch(url, 'PATCH', data, optionType);
 };
