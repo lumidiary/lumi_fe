@@ -18,6 +18,12 @@ const Home = () => {
   const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
     getCurrentUser()
       .then(u => setUser(u))
       .catch(err => console.error(err))

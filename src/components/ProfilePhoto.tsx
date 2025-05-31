@@ -1,9 +1,18 @@
+/*
+ * 프로필 이미지 업로드
+ */
+
 import { useRef, useState } from 'react';
 import styled from 'styled-components';
 import { FiPlus } from 'react-icons/fi';
 import { convertToImageUrl } from '@/utils/uploadImage';
 
-const ProfilePhoto = () => {
+interface ProfilePhotoProps {
+  // eslint-disable-next-line no-unused-vars
+  onFileSelect: (file: File) => void;
+}
+
+const ProfilePhoto = ({ onFileSelect }: ProfilePhotoProps) => {
   const [image, setImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -13,6 +22,7 @@ const ProfilePhoto = () => {
       try {
         const imageUrl = await convertToImageUrl(file);
         setImage(imageUrl);
+        onFileSelect(file);
       } catch (error) {
         console.error('이미지 로드 오류:', error);
       }
