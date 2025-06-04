@@ -22,11 +22,6 @@ const KakaoMap = ({ places }: KakaoMapProps) => {
     const existingScript = document.getElementById(scriptId);
 
     const loadMap = () => {
-      if (!window.kakao?.maps) {
-        console.error('카카오맵 SDK가 로드되지 않았습니다.');
-        return;
-      }
-
       window.kakao.maps.load(() => {
         const container = document.getElementById('map');
         if (!container) return;
@@ -60,11 +55,17 @@ const KakaoMap = ({ places }: KakaoMapProps) => {
       script.id = scriptId;
       script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_API_KEY}&autoload=false`;
       script.async = true;
-      script.onload = loadMap;
+      script.onload = () => {
+        if (window.kakao && window.kakao.maps) {
+          loadMap();
+        }
+      };
       script.onerror = () => console.error('카카오맵 스크립트 로딩 실패');
       document.head.appendChild(script);
     } else {
-      loadMap();
+      if (window.kakao && window.kakao.maps) {
+        loadMap();
+      }
     }
   }, [places]);
 

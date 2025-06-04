@@ -13,6 +13,7 @@ import {
   Settings,
   ProfileEdit,
   DigestList,
+  ProfileImage,
 } from '@pages/index';
 
 const App = () => (
@@ -34,8 +35,9 @@ const App = () => (
         <Route path="/create/content" element={<DiaryCreate />} />
 
         <Route path="/digest/list" element={<DigestList />} />
-        <Route path="/digest/:month" element={<Digest />} />
+        <Route path="/digest/:month/:digestId" element={<Digest />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/profile-image" element={<ProfileImage />} />
       </Routes>
     </Container>
   </Router>

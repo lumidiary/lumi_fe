@@ -2,13 +2,14 @@
  * 환경설정 페이지 (10)
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { BackHeader, Button, Card } from '@components/common/index';
-import { CgProfile } from 'react-icons/cg';
 import LogoutModal from '@components/modal/LogoutModal';
 import DeleteAccountModal from '@components/modal/DeleteAccountModal';
+import ProfileImageInfo from '@components/ProfileImageInfo';
+import { requestDeleteFetch, requestGetFetch } from '@services/apiService';
 
 interface UserInfo {
   username?: string;
@@ -17,25 +18,59 @@ interface UserInfo {
   profileImageUrl?: string;
 }
 
-// api 연결 시 수정 예정
-const Setting = ({
-  username = 'aaaaaaaaaa',
-  email = 'aaa@naver.com',
-  birthdate = '2000년 5월 23일',
-  profileImageUrl,
-}: UserInfo) => {
+const Setting = () => {
   const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState<UserInfo>({});
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const data = await requestGetFetch('users/profile', 'tokenAndUserId');
+
+        setUserInfo({
+          username: data.name,
+          email: data.email,
+          birthdate: data.birthDate,
+          profileImageUrl: data.profileImageUrl,
+        });
+      } catch (error) {
+        console.error('프로필 정보를 불러오는 데 실패했습니다:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userId');
     setShowLogoutModal(false);
+    navigate('/login');
   };
 
-  const handleDeleteAccount = () => {
-    setShowDeleteModal(false);
-    console.log('회원 탈퇴 처리');
+  const handleDeleteAccount = async () => {
+    const token = localStorage.getItem('accessToken');
+    const userId = localStorage.getItem('userId');
+
+    if (!token || !userId) {
+      alert('로그인 정보가 없습니다.');
+      return;
+    }
+
+    try {
+      await requestDeleteFetch('users', 'tokenAndUserId');
+
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('userId');
+      setShowDeleteModal(false);
+      navigate('/login');
+    } catch (error) {
+      console.error('회원 탈퇴 중 오류 발생:', error);
+    }
   };
+
   return (
     <Container>
       <BackHeader title="환경설정" />
@@ -44,15 +79,11 @@ const Setting = ({
           <InfoCard>
             <Title>사용자 정보</Title>
             <UserInfo>
-              {profileImageUrl ? (
-                <ProfileImage src={profileImageUrl} alt="프로필 이미지" />
-              ) : (
-                <CgProfile color="#d9d9d9" size={72} />
-              )}
+              <ProfileImageInfo profileImageUrl={userInfo.profileImageUrl} />
               <TextGroup>
-                <Username>{username}</Username>
-                <Info>{email}</Info>
-                <Info>생년월일: {birthdate}</Info>
+                <Username>{userInfo.username || 'username'}</Username>
+                <Info>{userInfo.email || 'aaa@gmail.com'}</Info>
+                <Info>생년월일: {userInfo.birthdate || '2000.01.01'}</Info>
               </TextGroup>
             </UserInfo>
             <ButtonWrapper>
@@ -139,14 +170,6 @@ const Title = styled.p`
 const UserInfo = styled.div`
   display: flex;
   align-items: center;
-`;
-
-const ProfileImage = styled.img`
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-right: 1rem;
 `;
 
 const TextGroup = styled.div`

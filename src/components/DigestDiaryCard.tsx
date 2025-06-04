@@ -10,10 +10,20 @@ export interface DiaryData {
   summary: string;
   prompt: string;
   answer: string;
-  address: string;
+  address: string; // 이건 그대로 유지 (혹시 서버에서 온 주소가 있을 경우 대비)
+  latitude: number | null;
+  longitude: number | null;
 }
 
+import useAddressFromCoords from '@/hooks/useAddressFromCoords';
+
 const DigestDiaryCard = ({ diary }: { diary: DiaryData }) => {
+  const fallbackAddress = diary.address || 'No Place';
+  const address =
+    diary.latitude && diary.longitude
+      ? useAddressFromCoords(diary.latitude, diary.longitude)
+      : fallbackAddress;
+
   return (
     <DiaryCard>
       <DiaryTopRow>
@@ -29,7 +39,7 @@ const DigestDiaryCard = ({ diary }: { diary: DiaryData }) => {
         </DiaryLeftGroup>
         <DiaryLocation>
           <FaMapMarkerAlt size={16} style={{ marginRight: '4px' }} />
-          {diary.address || 'No Place'}
+          {address}
         </DiaryLocation>
       </DiaryTopRow>
       <Divider />
@@ -49,7 +59,6 @@ const DigestDiaryCard = ({ diary }: { diary: DiaryData }) => {
     </DiaryCard>
   );
 };
-
 export default DigestDiaryCard;
 
 const DiaryCard = styled.div`

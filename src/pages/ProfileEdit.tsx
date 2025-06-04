@@ -12,58 +12,22 @@ import {
   Input,
   ContentContainer,
 } from '@components/common';
+import { validateYear, validateMonth, validateDay } from '@/utils/validation';
 import {
-  validateEmail,
-  validateNickname,
-  validateYear,
-  validateMonth,
-  validateDay,
-} from '@/utils/validation';
-import {
-  emailErrorMessage,
-  emailAvailableMessage,
-  emailRequiredMessage,
   nicknameErrorMessage,
-  nicknameAvailableMessage,
-  nicknameRequiredMessage,
   yearErrorMessage,
   monthErrorMessage,
   dayErrorMessage,
 } from '@/utils/validationMessages';
-import ProfilePhoto from '@components/ProfilePhoto';
+import Logo from '@assets/logo.svg?react';
+import { requestPutFetch } from '@services/apiService';
 
 const ProfileEdit = () => {
   const navigate = useNavigate();
-  const [emailMessage, setEmailMessage] = useState('');
   const [nicknameMessage, setNicknameMessage] = useState('');
   const [birthMessage, setBirthMessage] = useState('');
-  const [emailChecked, setEmailChecked] = useState(false);
-  const [nicknameChecked, setNicknameChecked] = useState(false);
 
-  const handleEmailCheck = () => {
-    const email = (document.getElementById('email') as HTMLInputElement)?.value;
-    if (!validateEmail(email)) {
-      setEmailMessage(emailErrorMessage);
-      setEmailChecked(false);
-    } else {
-      setEmailMessage(emailAvailableMessage);
-      setEmailChecked(true);
-    }
-  };
-
-  const handleNicknameCheck = () => {
-    const nickname = (document.getElementById('nickname') as HTMLInputElement)
-      ?.value;
-    if (!validateNickname(nickname)) {
-      setNicknameMessage(nicknameErrorMessage);
-      setNicknameChecked(false);
-    } else {
-      setNicknameMessage(nicknameAvailableMessage);
-      setNicknameChecked(true);
-    }
-  };
-
-  const handleSignUp = () => {
+  const handleEdit = async () => {
     const year = parseInt(
       (document.getElementById('year') as HTMLInputElement)?.value,
     );
@@ -73,17 +37,17 @@ const ProfileEdit = () => {
     const day = parseInt(
       (document.getElementById('day') as HTMLInputElement)?.value,
     );
+    const nickname = (
+      document.getElementById('nickname') as HTMLInputElement
+    )?.value.trim();
 
     let valid = true;
 
-    if (!emailChecked) {
-      setEmailMessage(emailRequiredMessage);
+    if (!nickname) {
+      setNicknameMessage(nicknameErrorMessage);
       valid = false;
-    }
-
-    if (!nicknameChecked) {
-      setNicknameMessage(nicknameRequiredMessage);
-      valid = false;
+    } else {
+      setNicknameMessage('');
     }
 
     if (!validateYear(year)) {
@@ -99,9 +63,24 @@ const ProfileEdit = () => {
       setBirthMessage('');
     }
 
-    if (valid) {
-      console.log('프로필 수정');
+    if (!valid) return;
+
+    const birthDate = `${year.toString().padStart(4, '0')}-${month
+      .toString()
+      .padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+    const data = {
+      name: nickname,
+      birthDate,
+      theme: 'LIGHT',
+    };
+
+    try {
+      await requestPutFetch('users/profile', data, 'tokenAndUserId');
+      alert('프로필이 성공적으로 수정되었습니다.');
       navigate('/settings', { replace: true });
+    } catch (error: any) {
+      alert(`프로필 수정 실패: ${error?.message || error}`);
     }
   };
 
@@ -110,28 +89,10 @@ const ProfileEdit = () => {
       <BackHeader title="프로필 수정" />
       <ContentContainer>
         <Card>
-          <ProfilePhoto />
+          <Logo />
           <Form>
-            <Label>Email</Label>
-            <Row>
-              <Input id="email" placeholder="Email을 입력하세요" />
-              <Button
-                type="request"
-                buttonText="중복확인"
-                onClick={handleEmailCheck}
-              />
-            </Row>
-            {emailMessage && <Message>{emailMessage}</Message>}
-
             <Label>Nickname</Label>
-            <Row>
-              <Input id="nickname" placeholder="닉네임을 입력하세요" />
-              <Button
-                type="request"
-                buttonText="중복확인"
-                onClick={handleNicknameCheck}
-              />
-            </Row>
+            <Input id="nickname" placeholder="닉네임을 입력하세요" />
             {nicknameMessage && <Message>{nicknameMessage}</Message>}
 
             <Label>생년월일</Label>
@@ -160,7 +121,7 @@ const ProfileEdit = () => {
             <Button
               type="login"
               buttonText="프로필 수정"
-              onClick={handleSignUp}
+              onClick={handleEdit}
               style={{ marginTop: '3rem' }}
             />
           </Form>
@@ -183,6 +144,7 @@ const Form = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  margin-top: 2rem;
 `;
 
 const Label = styled.label`
@@ -190,13 +152,6 @@ const Label = styled.label`
   font-weight: 500;
   margin-bottom: 0.3rem;
   margin-top: 1rem;
-`;
-
-const Row = styled.div`
-  display: flex;
-  align-items: center;
-  width: 100%;
-  gap: 0.5rem;
 `;
 
 const BirthRow = styled.div`

@@ -1,20 +1,30 @@
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Logo from '@assets/logo_mini.svg?react';
 import Button from './Button';
 import { CgProfile } from 'react-icons/cg';
+import { requestGetFetch } from '@services/apiService';
 
-interface HeaderProps {
-  username?: string;
-  profileImageUrl?: string;
-}
-
-const UserHeader = ({ username, profileImageUrl }: HeaderProps) => {
+const UserHeader = () => {
   const navigate = useNavigate();
+  const [username, setUsername] = useState<string>();
+  const [profileImageUrl, setProfileImageUrl] = useState<string>();
 
-  // 임시 - api 연동 시 삭제
-  username = '';
-  profileImageUrl = '';
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const data = await requestGetFetch('users/profile', 'tokenAndUserId');
+
+        setUsername(data.name);
+        setProfileImageUrl(data.profileImageUrl);
+      } catch (error) {
+        console.error('프로필 불러오기 실패:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   return (
     <HeaderContainer>
