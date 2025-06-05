@@ -2,39 +2,127 @@
  * 일기 작성하기 페이지 (8)
  */
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled, { css } from 'styled-components';
 import { BackHeader, Button, Card, ContentContainer } from '@components/common';
 import AiIcon from '@/assets/ai.svg?react';
-
-const moods = [
-  { id: 'happy', icon: '😊' },
-  { id: 'laugh', icon: '😄' },
-  { id: 'neutral', icon: '😐' },
-  { id: 'angry', icon: '😠' },
-  { id: 'sad', icon: '😭' },
-];
+import { EmotionType, emotionEmojiMap } from '@/types/emotion';
+import { useDiaryWebSocket } from '@/hooks/useDiaryWebSocket';
 
 const DiaryCreate = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const images = location.state?.images || [];
+  const diaryId: string = location.state?.diaryId;
+
+  const moods: { id: EmotionType; icon: string }[] = Object.entries(
+    emotionEmojiMap,
+  ).map(([key, value]) => ({
+    id: key as EmotionType,
+    icon: value,
+  }));
 
   const [selectedMood, setSelectedMood] = useState('');
-  const [q1, setQ1] = useState('');
-  const [q2, setQ2] = useState('');
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<string[]>([]);
+  const [questionIds, setQuestionIds] = useState<string[]>([]);
+  const [, setIsAnalysisDone] = useState(false);
 
-  const handleSave = () => {
-    const diaryData = {
-      images,
-      mood: selectedMood,
-      answer1: q1,
-      answer2: q2,
-    };
+  const handleWsMessage = useCallback(
+    (parsed: { type: any; content: any; questions: any }) => {
+      const { type, content, questions } = parsed;
+      switch (type) {
+        case 'QUESTION':
+          if (Array.isArray(questions)) {
+            const questionTexts = questions.map(q => q.question);
+            console.log('[질문 수신됨]', questionTexts);
+            setQuestions(prev => [...prev, ...questions.map(q => q.question)]);
+            setQuestionIds(prev => [...prev, ...questions.map(q => q.id)]);
+          }
+          break;
+        case 'ANALYSIS_COMPLETE':
+          setIsAnalysisDone(true);
+          break;
+        case 'ERROR':
+          console.log('UNKNOWN 에러:', content);
+          break;
+        case 'DISCONNECT_REQUEST':
+          console.log('서버에서 연결 해제를 요청했습니다.');
+          break;
+        default:
+          console.log('UNKNOWN MESSAGE:', parsed);
+      }
+    },
+    [],
+  );
+  const test = 'ca802f5b-436e-4b76-95f8-b96d3d08e074';
+  useDiaryWebSocket(test, handleWsMessage);
 
-    console.log(diaryData);
-    navigate('/');
+  const handleAnswerChange = (index: number, value: string) => {
+    const newAnswers = [...answers];
+    newAnswers[index] = value;
+    setAnswers(newAnswers);
+  };
+
+  const handleSave = async () => {
+    if (!diaryId) {
+      alert('diaryId가 없습니다.');
+      return;
+    }
+
+    if (!selectedMood) {
+      alert('감정을 선택해 주세요.');
+      return;
+    }
+
+    const userId = localStorage.getItem('userId');
+
+    try {
+      const payload = {
+        diaryId,
+        userId,
+        emotionTag: selectedMood.toUpperCase() as EmotionType,
+        answers: questions.map((_question, i) => ({
+          id: questionIds[i] || `question-${i}`,
+          answer: answers[i] || '',
+        })),
+      };
+      // 기존 더미 데이터 주석 처리
+      // answers: [
+      //   {
+      //     id: '40ff5670-67eb-487f-9409-acf965191f29',
+      //     answer:
+      //       '화이트 밸런스를 따뜻하게 조정하고, HSL에서 오렌지와 레드를 강조하세요.',
+      //   },
+      //   {
+      //     id: '407fac8d-57dd-4893-8051-8a2818033a83',
+      //     answer:
+      //       '선명도와 텍스처를 높이고, 나무 부분만 마스킹해서 디테일을 강조하세요.',
+      //   },
+      // ],
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/core/diaries/answers`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`저장 실패: ${response.status} - ${text}`);
+      }
+
+      console.log('일기 저장 성공:', payload);
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('저장 실패:', error);
+      alert('저장 중 오류가 발생했습니다.');
+    }
   };
 
   return (
@@ -62,22 +150,30 @@ const DiaryCreate = () => {
             AI 질문에 답해주세요
           </Title>
           <SubText>AI가 분석한 결과를 바탕으로 맞춤 질문을 준비했어요!</SubText>
-          <Question>
-            <Label>Q1. 오늘 있었던 특별한 일이 있었나요?</Label>
-            <TextArea
-              value={q1}
-              onChange={e => setQ1(e.target.value)}
-              placeholder="여기에 내용을 입력하세요..."
-            />
-          </Question>
-          <Question>
-            <Label>Q2. 오늘 하루 기분이 좋았던 이유는 무엇인가요?</Label>
-            <TextArea
-              value={q2}
-              onChange={e => setQ2(e.target.value)}
-              placeholder="여기에 내용을 입력하세요..."
-            />
-          </Question>
+          {questions.length === 0 && (
+            <p
+              style={{
+                fontSize: '0.85rem',
+                color: '#9ca3af',
+                marginBottom: '1rem',
+              }}
+            >
+              질문을 수신 중입니다. 잠시만 기다려주세요...
+            </p>
+          )}
+          {questions.map((q, i) => (
+            <Question key={i}>
+              <Label>
+                Q{i + 1}. {q}
+              </Label>
+              <TextArea
+                value={answers[i] || ''}
+                onChange={e => handleAnswerChange(i, e.target.value)}
+                placeholder="여기에 내용을 입력하세요..."
+              />
+            </Question>
+          ))}
+
           <Button
             type="setting"
             buttonText="일기 저장하기"

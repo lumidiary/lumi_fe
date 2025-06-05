@@ -11,18 +11,25 @@ import {
   Card,
   ContentContainer,
 } from '@components/common/index';
-import { ImageUrlsFromInputEvent } from '@utils/uploadImage';
 import ImageFrame from '@components/ImageFrame';
+import { createSession, startAnalysis } from '@/services/diaryapi';
 
 const DiaryImageUpload = () => {
   const [images, setImages] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const imageUrls = ImageUrlsFromInputEvent(e, 4);
-    setImages(imageUrls);
+    const fileList = e.target.files;
+    if (!fileList) return;
+
+    const selectedFiles = Array.from(fileList).slice(0, 4);
+    const previewUrls = selectedFiles.map(file => URL.createObjectURL(file));
+
+    setImages(previewUrls);
+    setFiles(selectedFiles);
     setCurrentIndex(0);
   };
 
@@ -38,8 +45,18 @@ const DiaryImageUpload = () => {
     fileInputRef.current?.click();
   };
 
-  const handleNextPage = () => {
-    navigate('/create/content', { state: { images } });
+  const handleNextPage = async () => {
+    if (files.length === 0) return;
+
+    const fileNames = files.map(file => file.name);
+    try {
+      const diaryId = await createSession(fileNames, files);
+      await startAnalysis(diaryId);
+      navigate('/create/content', { state: { images, diaryId } });
+    } catch (err) {
+      console.error('이미지 업로드 또는 세션 생성 실패:', err);
+      alert('이미지를 업로드하는 데 실패했습니다.');
+    }
   };
 
   return (
