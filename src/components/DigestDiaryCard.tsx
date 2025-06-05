@@ -1,28 +1,25 @@
 import styled from 'styled-components';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 import { LuCalendar } from 'react-icons/lu';
+import useAddressFromCoords from '@/hooks/useAddressFromCoords';
 
 export interface DiaryData {
   diaryId: string;
   capturedAt: string;
   emotion: string;
   imageUrl: string;
-  summary: string;
-  prompt: string;
-  answer: string;
-  address: string; // 이건 그대로 유지 (혹시 서버에서 온 주소가 있을 경우 대비)
+  diarySummary: string;
+  address: string;
   latitude: number | null;
   longitude: number | null;
 }
 
-import useAddressFromCoords from '@/hooks/useAddressFromCoords';
-
 const DigestDiaryCard = ({ diary }: { diary: DiaryData }) => {
-  const fallbackAddress = diary.address || 'No Place';
-  const address =
-    diary.latitude && diary.longitude
-      ? useAddressFromCoords(diary.latitude, diary.longitude)
-      : fallbackAddress;
+  const addressFromCoords = useAddressFromCoords(
+    diary.latitude,
+    diary.longitude,
+  );
+  const address = addressFromCoords || diary.address || 'No Place';
 
   return (
     <DiaryCard>
@@ -52,13 +49,17 @@ const DigestDiaryCard = ({ diary }: { diary: DiaryData }) => {
           )}
         </DiaryImageBox>
         <DiaryTextBlock>
-          <DiaryPrompt>{diary.prompt || 'No Question'}</DiaryPrompt>
-          <DiaryPreview>{diary.answer || 'No Content'}</DiaryPreview>
+          <DiarySummary>
+            {diary.diarySummary?.trim() !== ''
+              ? diary.diarySummary
+              : 'No Summary'}
+          </DiarySummary>
         </DiaryTextBlock>
       </DiaryContentRow>
     </DiaryCard>
   );
 };
+
 export default DigestDiaryCard;
 
 const DiaryCard = styled.div`
@@ -140,18 +141,14 @@ const DiaryImageBox = styled.div`
 const DiaryTextBlock = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: center;
   flex: 1;
 `;
 
-const DiaryPrompt = styled.div`
-  font-weight: 600;
-  font-size: 15px;
-  color: #4b9cd3;
-  margin-top: 30px;
-`;
-
-const DiaryPreview = styled.div`
+const DiarySummary = styled.div`
   font-size: 14px;
   color: #333;
+  margin-top: 30px;
+  text-align: left;
+  line-height: 1.6;
 `;

@@ -1,4 +1,3 @@
-// 필요한 라이브러리 및 컴포넌트 불러오기
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -67,6 +66,7 @@ const Digest = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    if (!digestId) return;
 
     const fetchDigest = async () => {
       try {
@@ -74,6 +74,9 @@ const Digest = () => {
           `https://api.lumidiary.com/core/digests/${digestId}`,
         );
         const data = await res.json();
+
+        if (!data || !Array.isArray(data.entries)) return;
+
         setDigestData(data);
 
         setRecords([
@@ -82,32 +85,19 @@ const Digest = () => {
           { title: '이번 달 특별했던 순간', content: data.specialMoment },
         ]);
 
-        const detailed = await Promise.all(
-          data.entries.slice(0, 3).map(async (entry: any) => {
-            const diaryRes = await fetch(
-              `https://api.lumidiary.com/core/diaries/${entry.diaryId}`,
-            ).then(r => r.json());
-
-            const rawEmotion =
-              diaryRes.emotionalTag?.toLowerCase() || 'neutral';
-            const firstPhoto = diaryRes.photos?.[0];
-
-            const diaryData = {
-              diaryId: diaryRes.diaryId,
-              emotion: emotionEmojiMap[rawEmotion] || '❓',
-              capturedAt: diaryRes.createdAt,
-              imageUrl: firstPhoto?.url || '',
-              latitude: firstPhoto?.latitude || null,
-              longitude: firstPhoto?.longitude || null,
-              prompt: diaryRes.answers?.[0]?.question || '',
-              answer: diaryRes.answers?.[0]?.answer || '',
-              address: '',
-              summary: entry.summary || '',
-            };
-
-            return diaryData;
-          }),
-        );
+        const detailed = data.entries.map((entry: any) => {
+          const rawEmotion = entry.emotion?.toLowerCase() || 'neutral';
+          return {
+            diaryId: entry.diaryId,
+            emotion: emotionEmojiMap[rawEmotion] || '❓',
+            capturedAt: entry.capturedAt,
+            imageUrl: '',
+            diarySummary: entry.summary || '',
+            latitude: entry.latitude,
+            longitude: entry.longitude,
+            address: '',
+          };
+        });
 
         setDetailedDiaries(detailed);
 
@@ -123,9 +113,7 @@ const Digest = () => {
           const emotionKey = Object.keys(emotionEmojiMap).find(
             key => emotionEmojiMap[key] === diary.emotion,
           ) as keyof typeof countMap;
-          if (emotionKey) {
-            countMap[emotionKey]++;
-          }
+          if (emotionKey) countMap[emotionKey]++;
         });
 
         const stats = Object.entries(countMap).map(([key, count]) => ({
@@ -143,6 +131,7 @@ const Digest = () => {
     fetchDigest();
   }, [digestId]);
 
+  // 지도 마커용
   const places =
     detailedDiaries
       .filter((diary: any) => diary.latitude && diary.longitude)
@@ -161,7 +150,6 @@ const Digest = () => {
       <BackHeader title="다이제스트 상세보기" />
       <ContentContainer>
         <Wrapper>
-          {/* 요약 카드 */}
           <SummaryCard>
             <CardTopBackground>
               <TitleBox>
@@ -178,14 +166,13 @@ const Digest = () => {
                 총 {digestData?.entries?.length || 0}회의 일기를 작성했습니다.
               </DescText>
               {digestData?.summary && (
-                <DescText style={{ marginTop: '8px', whiteSpace: 'pre-line' }}>
+                <DescText style={{ marginTop: '8px' }}>
                   {digestData.summary}
                 </DescText>
               )}
             </EmotionBlock>
           </SummaryCard>
 
-          {/* AI 분석 기록 섹션 */}
           <RecordSection>
             <SectionTitle>AI가 분석한 이번 달의 기록</SectionTitle>
             <RecordList>
@@ -200,7 +187,6 @@ const Digest = () => {
             </RecordList>
           </RecordSection>
 
-          {/* 탭 선택 영역 */}
           <TabWrapper>
             <TabButton
               $active={activeTab === 'diary'}
@@ -216,7 +202,6 @@ const Digest = () => {
             </TabButton>
           </TabWrapper>
 
-          {/* 탭 내용 */}
           <TabContent>
             {activeTab === 'diary' && (
               <DigestCardList>
@@ -231,15 +216,13 @@ const Digest = () => {
                           key={i}
                           diary={{
                             diaryId: '',
-                            summary: '내용 없음',
+                            diarySummary: '',
                             emotion: '',
                             capturedAt: '',
                             imageUrl: '',
-                            prompt: '',
-                            answer: '',
                             address: '',
-                            latitude: null, // 👈 추가
-                            longitude: null, // 👈 추가
+                            latitude: null,
+                            longitude: null,
                           }}
                         />
                       ))}
@@ -248,13 +231,11 @@ const Digest = () => {
 
             {activeTab === 'stats' && (
               <>
-                {/* 감정 통계 */}
                 <StatsSection>
                   <SectionTitle>이번 달 감정 통계</SectionTitle>
                   <EmotionStatList stats={emotionStats} />
                 </StatsSection>
 
-                {/* 지도 섹션 */}
                 <StatsSection>
                   <SectionTitle>이번 달 방문한 장소</SectionTitle>
                   <KakaoMap places={places} />
@@ -348,7 +329,6 @@ const DescText = styled.p`
   font-size: 14px;
   line-height: 1.6;
   color: #333;
-  white-space: pre-line;
 `;
 
 const RecordSection = styled.div`

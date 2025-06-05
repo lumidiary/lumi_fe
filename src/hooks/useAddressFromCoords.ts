@@ -2,10 +2,18 @@
 
 import { useEffect, useState } from 'react';
 
-const useAddressFromCoords = (lat: number, lng: number) => {
-  const [address, setAddress] = useState(''); // 초기값
+const useAddressFromCoords = (
+  lat: number | null,
+  lng: number | null,
+): string => {
+  const [address, setAddress] = useState('');
 
   useEffect(() => {
+    if (typeof lat !== 'number' || typeof lng !== 'number') {
+      setAddress('');
+      return;
+    }
+
     const fetchAddress = async () => {
       try {
         const res = await fetch(
