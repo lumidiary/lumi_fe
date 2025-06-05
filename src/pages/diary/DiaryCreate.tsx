@@ -29,29 +29,19 @@ const DiaryCreate = () => {
   const [, setIsAnalysisDone] = useState(false);
 
   const handleWsMessage = useCallback(
-    (parsed: { type: any; content: any; questions: any }) => {
-      const { type, content, questions } = parsed;
-      switch (type) {
-        case 'QUESTION':
-          if (Array.isArray(questions)) {
-            const questionTexts = questions.map(q => q.question);
-            console.log('[질문 수신됨]', questionTexts);
-            setQuestions(prev => [...prev, ...questions.map(q => q.question)]);
-            setQuestionIds(prev => [...prev, ...questions.map(q => q.id)]);
-          }
-          break;
-        case 'ANALYSIS_COMPLETE':
-          setIsAnalysisDone(true);
-          break;
-        case 'ERROR':
-          console.log('UNKNOWN 에러:', content);
-          break;
-        case 'DISCONNECT_REQUEST':
-          console.log('서버에서 연결 해제를 요청했습니다.');
-          break;
-        default:
-          console.log('UNKNOWN MESSAGE:', parsed);
-      }
+    ({
+      overallDaySummary,
+      questions: finalQs,
+    }: {
+      overallDaySummary: string;
+      questions: { id: string; question: string }[];
+    }) => {
+      console.log('[Summary]', overallDaySummary);
+      console.log('[Questions]', finalQs);
+      // extract question texts and ids
+      setQuestions(finalQs.map(q => q.question));
+      setQuestionIds(finalQs.map(q => q.id));
+      setIsAnalysisDone(true);
     },
     [],
   );
