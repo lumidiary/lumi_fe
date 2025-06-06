@@ -20,6 +20,13 @@ const Home = () => {
   const [digests, setDigests] = useState<DigestItemType[]>([]);
 
   useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    const userId = localStorage.getItem('userId');
+    if (!token || !userId) {
+      navigate('/login');
+      return;
+    }
+
     const fetchUserProfile = async () => {
       try {
         const data = await requestGetFetch('users/profile', 'tokenAndUserId');
