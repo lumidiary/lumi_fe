@@ -1,8 +1,4 @@
-/*
- * 일기 상세보기 (6)
- */
-
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaRegTrashAlt, FaMapMarkerAlt } from 'react-icons/fa';
@@ -10,95 +6,129 @@ import { LuCalendar } from 'react-icons/lu';
 import { BackHeader, Card, ContentContainer } from '@components/common';
 import ImageFrame from '@components/ImageFrame';
 import DiaryDeleteModal from '@components/modal/DiaryDeleteModal';
-import { postDetail } from '@constants/dummy';
 import { emotionEmojiMap, EmotionType } from '@/types/emotion';
+import { getDiaryDetail, deleteDiary } from '@/services/diary';
+import { DiaryDetailType } from '@/types/diary';
+import useAddressFromCoords from '@/hooks/useAddressFromCoords';
 
 const DiaryDetail = () => {
   const { diaryId } = useParams<{ diaryId: string }>();
   const navigate = useNavigate();
+  const [diary, setDiary] = useState<DiaryDetailType | null>(null);
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const diary = {
-    ...postDetail,
-    id: Number(diaryId),
-  };
+  // 주소 훅
+  const firstPhoto = diary?.photos?.[0];
+  const locationName = useAddressFromCoords(
+    firstPhoto?.latitude ?? 0,
+    firstPhoto?.longitude ?? 0,
+  );
 
-  const handleDeleteDiary = () => {
-    setIsModalVisible(false);
-    navigate('/', { replace: true });
+  useEffect(() => {
+    if (!diaryId) return;
+
+    const fetchDiaryDetail = async () => {
+      try {
+        const res = await getDiaryDetail(diaryId);
+        const mappedDiary: DiaryDetailType = {
+          diaryId: res.diaryId,
+          createdAt: res.createdAt,
+          emotionTag: res.emotionTag,
+          overallDaySummary: res.overallDaySummary,
+          answers: res.answers,
+          photos: res.photos,
+        };
+        setDiary(mappedDiary);
+      } catch (err) {
+        console.error('📌 일기 상세 조회 실패:', err);
+      }
+    };
+
+    fetchDiaryDetail();
+  }, [diaryId]);
+
+  const handleDeleteDiary = async () => {
+    if (!diary) return;
+    try {
+      await deleteDiary(diary.diaryId);
+      alert('일기가 삭제되었습니다.');
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('삭제 실패:', error);
+      alert('삭제 중 오류가 발생했습니다.');
+    } finally {
+      setIsModalVisible(false);
+    }
   };
 
   return (
     <Container>
       <BackHeader title="일기 상세보기" />
-      <ContentContainer>
-        <Card style={{ width: '100%' }}>
-          <PostInfo>
-            <InfoBox>
-              <TopRow>
-                <LeftSide>
-                  <Emotion>
-                    {emotionEmojiMap[diary.emotion as EmotionType]}
-                  </Emotion>
-                  <DateLocation>
-                    <DateText>
-                      <LuCalendar
-                        size={18}
-                        style={{ color: '#757575', marginRight: '8px' }}
-                      />
-                      {diary.date} (월요일)
-                    </DateText>
-                    <Location>
-                      <FaMapMarkerAlt
-                        size={20}
-                        style={{ marginRight: '4px' }}
-                      />
-                      {diary.location}
-                    </Location>
-                  </DateLocation>
-                </LeftSide>
+      {diary && (
+        <ContentContainer>
+          <Card style={{ width: '100%' }}>
+            <PostInfo>
+              <InfoBox>
+                <TopRow>
+                  <LeftSide>
+                    <Emotion>
+                      {emotionEmojiMap[diary.emotionTag as EmotionType]}
+                    </Emotion>
+                    <DateLocation>
+                      <DateText>
+                        <LuCalendar
+                          size={18}
+                          style={{ color: '#757575', marginRight: '8px' }}
+                        />
+                        {diary.createdAt.slice(0, 10)} (월요일)
+                      </DateText>
+                      <Location>
+                        <FaMapMarkerAlt
+                          size={20}
+                          style={{ marginRight: '4px' }}
+                        />
+                        {locationName || '위치 정보 없음'}
+                      </Location>
+                    </DateLocation>
+                  </LeftSide>
+                  <FaRegTrashAlt
+                    size={24}
+                    color="#6B7280"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => setIsModalVisible(true)}
+                  />
+                </TopRow>
+              </InfoBox>
 
-                <FaRegTrashAlt
-                  size={24}
-                  color="#6B7280"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setIsModalVisible(true)}
-                />
-              </TopRow>
+              <ImageFrame
+                images={diary.photos.map(photo => photo.url)}
+                currentIndex={currentImageIdx}
+                onPrev={() =>
+                  setCurrentImageIdx(
+                    idx =>
+                      (idx - 1 + diary.photos.length) % diary.photos.length,
+                  )
+                }
+                onNext={() =>
+                  setCurrentImageIdx(idx => (idx + 1) % diary.photos.length)
+                }
+              />
+            </PostInfo>
 
-              <TagList>
-                {diary.tags.map((t, i) => (
-                  <Tag key={i}>{t}</Tag>
+            <Qa>
+              {diary.answers
+                .filter(q => q.answer && q.question) // answer가 존재하는 항목만
+                .map((q, i) => (
+                  <div key={i}>
+                    <Question>Q. {q.question}</Question>
+                    <Answer>{q.answer}</Answer>
+                  </div>
                 ))}
-              </TagList>
-            </InfoBox>
-
-            <ImageFrame
-              images={diary.imageUrl}
-              currentIndex={currentImageIdx}
-              onPrev={() =>
-                setCurrentImageIdx(
-                  idx =>
-                    (idx - 1 + diary.imageUrl.length) % diary.imageUrl.length,
-                )
-              }
-              onNext={() =>
-                setCurrentImageIdx(idx => (idx + 1) % diary.imageUrl.length)
-              }
-            />
-          </PostInfo>
-
-          <Qa>
-            {diary.questions.map((q, i) => (
-              <div key={i}>
-                <Question>Q. {q.question}</Question>
-                <Answer>{q.answer}</Answer>
-              </div>
-            ))}
-          </Qa>
-        </Card>
-      </ContentContainer>
+            </Qa>
+          </Card>
+        </ContentContainer>
+      )}
 
       <DiaryDeleteModal
         isVisible={isModalVisible}
@@ -166,20 +196,6 @@ const Location = styled.span`
   color: #757575;
   display: flex;
   align-items: center;
-`;
-
-const TagList = styled.div`
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-`;
-
-const Tag = styled.span`
-  background: #4b9cd3;
-  color: #fff;
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 12px;
 `;
 
 const Qa = styled.div`

@@ -5,6 +5,9 @@ import svgr from 'vite-plugin-svgr';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), svgr()],
+  define: {
+    global: {},
+  },
 
   // 절대경로 설정
   resolve: {
