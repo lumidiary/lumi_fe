@@ -91,7 +91,7 @@ const Digest = () => {
             diaryId: entry.diaryId,
             emotion: emotionEmojiMap[rawEmotion] || '❓',
             capturedAt: entry.capturedAt,
-            imageUrl: '',
+            imageUrl: entry.imageUrl || '',
             diarySummary: entry.summary || '',
             latitude: entry.latitude,
             longitude: entry.longitude,
