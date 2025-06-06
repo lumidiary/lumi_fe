@@ -1,0 +1,19 @@
+################
+# :sparkles:[타입]: 제목의 형식으로 제목을 아래 공백줄에 작성
+# 제목은 30자 이내 / 변경사항이 "무엇"인지 명확히 작성 / 끝에 마침표 금지
+# 예) :sparkles:[feat]: 로그인 기능 추가
+
+# 사용 방법 i -> 커밋 내용 입력 -> :wq 
+
+
+################
+# :sparkles:[feat]: 새로운 기능 추가
+# :recycle:[refactor]: 코드 리팩토링
+# :art:[style]: 스타일 수정, 코드 의미에 영향을 주지 않는 변경사항
+# :bug:[fix]: 버그 수정
+# :memo:[docs]: 문서 작성 및 수정
+# :white_check_mark:[test] : 테스트 코드 추가
+# :wrench:[chore]: 빌드 업무 및 패키지 매니저 수정, production code와 무관한 부분들
+# :hammer:[rename]: 파일, 폴더 삭제 및 이름 수정
+# :bulb:[comment]: 주석 추가 및 변경
+################
