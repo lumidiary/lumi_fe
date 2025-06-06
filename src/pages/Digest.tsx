@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import KakaoMap from '@/components/KakaoMap';
 import { BackHeader, ContentContainer } from '@components/common';
@@ -10,65 +9,141 @@ import {
   EmotionStatList,
 } from '@components/index';
 
+const defaultEmotionStats = [
+  { emoji: '😊', count: 0, label: '행복' },
+  { emoji: '😁', count: 0, label: '기쁨' },
+  { emoji: '😐', count: 0, label: '보통' },
+  { emoji: '😠', count: 0, label: '화남' },
+  { emoji: '😭', count: 0, label: '슬픔' },
+];
+
 const Digest = () => {
   const [activeTab, setActiveTab] = useState<'diary' | 'stats'>('diary');
-  const [digestSummary, setDigestSummary] = useState<any>({
-    topEmoji: '',
-    summaryEmotion: '',
-    diaryCount: 0,
-    summaryText: '',
-    emotionStats: [
-      { emoji: '😊', count: 0, label: '행복' },
-      { emoji: '😁', count: 0, label: '기쁨' },
-      { emoji: '😐', count: 0, label: '보통' },
-      { emoji: '😠', count: 0, label: '화남' },
-      { emoji: '😭', count: 0, label: '슬픔' },
-    ],
-  });
+  const [digestData, setDigestData] = useState<any>(null);
   const [records, setRecords] = useState<any[]>([]);
-  const [diaries, setDiaries] = useState<any[]>([]);
-  const navigate = useNavigate();
-  const { month } = useParams();
+  const [detailedDiaries, setDetailedDiaries] = useState<any[]>([]);
+  const [emotionStats, setEmotionStats] = useState(defaultEmotionStats);
+  const { month, digestId } = useParams();
+
   const yearMonthText = (() => {
     if (!month) return '날짜 없음';
     const [year, m] = month.split('-');
     return `${year}년 ${parseInt(m)}월`;
   })();
 
+  const emotionEmojiMap: Record<string, string> = {
+    happy: '😊',
+    joy: '😁',
+    neutral: '😐',
+    angry: '😠',
+    sad: '😭',
+  };
+
+  const emotionLabelMap: Record<string, string> = {
+    happy: '행복',
+    joy: '기쁨',
+    neutral: '보통',
+    angry: '화남',
+    sad: '슬픔',
+  };
+
+  const getEmotionComment = (emotion: string) => {
+    switch (emotion) {
+      case 'happy':
+        return '이번 달은 행복한 달이었어요!';
+      case 'joy':
+        return '이번 달은 기쁨이 가득했어요!';
+      case 'neutral':
+        return '이번 달은 평범한 날들이었어요.';
+      case 'angry':
+        return '이번 달은 화가 나는 일이 많았어요.';
+      case 'sad':
+        return '이번 달은 슬픈 순간들이 있었어요.';
+      default:
+        return '이번 달은 다양한 감정이 섞여 있었어요!';
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
+    if (!digestId) return;
 
     const fetchDigest = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5173/digests/monthly?month=${month}`,
+          `${import.meta.env.VITE_SERVER_URL}/core/digests/${digestId}`,
         );
         const data = await res.json();
-        setDigestSummary(data);
-        setRecords(data.records || []);
+
+        if (!data || !Array.isArray(data.entries)) return;
+
+        setDigestData(data);
+
+        setRecords([
+          { title: '이번 달 활동', content: data.activity },
+          { title: '이번 달 감정', content: data.emotionTrend },
+          { title: '이번 달 특별했던 순간', content: data.specialMoment },
+        ]);
+
+        const detailed = data.entries.map((entry: any) => {
+          const rawEmotion = entry.emotion?.toLowerCase() || 'neutral';
+          return {
+            diaryId: entry.diaryId,
+            emotion: emotionEmojiMap[rawEmotion] || '❓',
+            capturedAt: entry.capturedAt,
+            imageUrl: entry.imageUrl || '',
+            diarySummary: entry.summary || '',
+            latitude: entry.latitude,
+            longitude: entry.longitude,
+            address: '',
+          };
+        });
+
+        setDetailedDiaries(detailed);
+
+        const countMap = {
+          happy: 0,
+          joy: 0,
+          neutral: 0,
+          angry: 0,
+          sad: 0,
+        };
+
+        detailed.forEach((diary: any) => {
+          const emotionKey = Object.keys(emotionEmojiMap).find(
+            key => emotionEmojiMap[key] === diary.emotion,
+          ) as keyof typeof countMap;
+          if (emotionKey) countMap[emotionKey]++;
+        });
+
+        const stats = Object.entries(countMap).map(([key, count]) => ({
+          emoji: emotionEmojiMap[key] || '❓',
+          count,
+          label: emotionLabelMap[key] || '기타',
+        }));
+
+        setEmotionStats(stats);
       } catch (err) {
         console.error('다이제스트 불러오기 실패:', err);
-        setRecords([
-          { title: '이번 달 활동', content: '' },
-          { title: '이번 달 감정', content: '' },
-          { title: '이번 달 특별했던 순간', content: '' },
-        ]);
-      }
-    };
-
-    const fetchDiaries = async () => {
-      try {
-        const res = await fetch('http://localhost:5173/diaries?size=3');
-        const data = await res.json();
-        setDiaries(data.content || []);
-      } catch (err) {
-        console.error('일기 리스트 불러오기 실패:', err);
       }
     };
 
     fetchDigest();
-    fetchDiaries();
-  }, []);
+  }, [digestId]);
+
+  // 지도 마커용
+  const places =
+    detailedDiaries
+      .filter((diary: any) => diary.latitude && diary.longitude)
+      .map((diary: any) => ({
+        lat: diary.latitude,
+        lng: diary.longitude,
+        placeName: diary.summary,
+      })) || [];
+
+  const emotionKey = digestData?.overallEmotion?.toLowerCase() || 'neutral';
+  const emoji = emotionEmojiMap[emotionKey] || '😊';
+  const comment = getEmotionComment(emotionKey);
 
   return (
     <Container>
@@ -82,21 +157,17 @@ const Digest = () => {
                 <CardTitle>{yearMonthText} 다이제스트</CardTitle>
               </TitleBox>
             </CardTopBackground>
-
             <EmotionBlock>
               <EmotionRow>
-                <Emoji>{digestSummary?.topEmoji || '😊'}</Emoji>
-                <BoldText>
-                  {digestSummary?.summaryEmotion ||
-                    '이번 달은 행복한 달이었어요!'}
-                </BoldText>
+                <Emoji>{emoji}</Emoji>
+                <BoldText>{comment}</BoldText>
               </EmotionRow>
               <DescText>
-                총 {digestSummary?.diaryCount || 0}회의 일기를 작성했습니다.
+                총 {digestData?.entries?.length || 0}회의 일기를 작성했습니다.
               </DescText>
-              {digestSummary?.summaryText && (
-                <DescText style={{ marginTop: '8px', whiteSpace: 'pre-line' }}>
-                  {digestSummary.summaryText}
+              {digestData?.summary && (
+                <DescText style={{ marginTop: '8px' }}>
+                  {digestData.summary}
                 </DescText>
               )}
             </EmotionBlock>
@@ -105,29 +176,26 @@ const Digest = () => {
           <RecordSection>
             <SectionTitle>AI가 분석한 이번 달의 기록</SectionTitle>
             <RecordList>
-              {[0, 1, 2].map(i => {
-                const r = records[i] || {};
-                return (
-                  <DigestRecordCard
-                    key={i}
-                    index={i}
-                    title={r.title}
-                    content={r.content}
-                  />
-                );
-              })}
+              {[0, 1, 2].map(i => (
+                <DigestRecordCard
+                  key={i}
+                  index={i}
+                  title={records[i]?.title || `제목 없음 ${i + 1}`}
+                  content={records[i]?.content || '아직 내용이 없습니다.'}
+                />
+              ))}
             </RecordList>
           </RecordSection>
 
           <TabWrapper>
             <TabButton
-              active={activeTab === 'diary'}
+              $active={activeTab === 'diary'}
               onClick={() => setActiveTab('diary')}
             >
               작성한 일기
             </TabButton>
             <TabButton
-              active={activeTab === 'stats'}
+              $active={activeTab === 'stats'}
               onClick={() => setActiveTab('stats')}
             >
               통계
@@ -137,10 +205,27 @@ const Digest = () => {
           <TabContent>
             {activeTab === 'diary' && (
               <DigestCardList>
-                {[0, 1, 2].map(i => {
-                  const diary = diaries[i] || {};
-                  return <DigestDiaryCard key={i} diary={diary} />;
-                })}
+                {detailedDiaries.length > 0
+                  ? detailedDiaries.map((diary, i) => (
+                      <DigestDiaryCard key={i} diary={diary} />
+                    ))
+                  : Array(3)
+                      .fill(null)
+                      .map((_, i) => (
+                        <DigestDiaryCard
+                          key={i}
+                          diary={{
+                            diaryId: '',
+                            diarySummary: '',
+                            emotion: '',
+                            capturedAt: '',
+                            imageUrl: '',
+                            address: '',
+                            latitude: null,
+                            longitude: null,
+                          }}
+                        />
+                      ))}
               </DigestCardList>
             )}
 
@@ -148,12 +233,12 @@ const Digest = () => {
               <>
                 <StatsSection>
                   <SectionTitle>이번 달 감정 통계</SectionTitle>
-                  <EmotionStatList stats={digestSummary?.emotionStats || []} />
+                  <EmotionStatList stats={emotionStats} />
                 </StatsSection>
 
                 <StatsSection>
                   <SectionTitle>이번 달 방문한 장소</SectionTitle>
-                  <KakaoMap places={digestSummary?.places || []} />
+                  <KakaoMap places={places} />
                 </StatsSection>
               </>
             )}
@@ -244,7 +329,6 @@ const DescText = styled.p`
   font-size: 14px;
   line-height: 1.6;
   color: #333;
-  white-space: pre-line;
 `;
 
 const RecordSection = styled.div`
@@ -277,13 +361,13 @@ const TabWrapper = styled.div`
   margin-bottom: 24px;
 `;
 
-const TabButton = styled.button<{ active: boolean }>`
+const TabButton = styled.button<{ $active: boolean }>`
   flex: 1;
   padding: 12px 0;
   font-size: 14px;
-  font-weight: ${({ active }) => (active ? '700' : '500')};
-  color: ${({ active }) => (active ? '#111' : '#888')};
-  background-color: ${({ active }) => (active ? '#ffffff' : 'transparent')};
+  font-weight: ${({ $active }) => ($active ? '700' : '500')};
+  color: ${({ $active }) => ($active ? '#111' : '#888')};
+  background-color: ${({ $active }) => ($active ? '#ffffff' : 'transparent')};
   border: none;
   border-radius: 8px;
   cursor: pointer;

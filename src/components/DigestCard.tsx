@@ -11,6 +11,7 @@ interface DigestCardProps {
   content: string;
   monthPath: string;
   imageUrl?: string;
+  digestId: string;
 }
 
 const DigestCard = ({
@@ -18,6 +19,7 @@ const DigestCard = ({
   title,
   content,
   monthPath,
+  digestId,
   imageUrl,
 }: DigestCardProps) => {
   const navigate = useNavigate();
@@ -31,7 +33,9 @@ const DigestCard = ({
         <DateText>{dateText}</DateText>
         <DigestTitle>{title}</DigestTitle>
         <ContentText>{content}</ContentText>
-        <DetailLink onClick={() => navigate(`/digest/${monthPath}`)}>
+        <DetailLink
+          onClick={() => navigate(`/digest/${monthPath}/${digestId}`)}
+        >
           자세히 보기
         </DetailLink>
       </WhiteSection>

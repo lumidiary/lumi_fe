@@ -103,6 +103,7 @@ const Home = () => {
               digests.map(d => (
                 <DigestCard
                   key={d.id}
+                  digestId={d.id}
                   dateText={`${d.periodStart} ~ ${d.periodEnd}`}
                   title={d.title}
                   content={d.summary}
@@ -187,6 +188,8 @@ const EmptyMessage = styled.p`
   font-size: 0.95rem;
   color: #888;
   text-align: center;
-  padding: 20px;
-  width: 100%;
+  padding: 20px 500px;
+
+  grid-column: 1 / -1;
+  justify-self: center;
 `;

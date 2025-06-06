@@ -1,19 +1,26 @@
 import styled from 'styled-components';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 import { LuCalendar } from 'react-icons/lu';
+import useAddressFromCoords from '@/hooks/useAddressFromCoords';
 
-interface DiaryProps {
-  diary: {
-    emotion?: string;
-    date?: string;
-    location?: string;
-    imageUrl?: string;
-    prompt?: string;
-    preview?: string;
-  };
+export interface DiaryData {
+  diaryId: string;
+  capturedAt: string;
+  emotion: string;
+  imageUrl: string;
+  diarySummary: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
-const DigestDiaryCard = ({ diary }: DiaryProps) => {
+const DigestDiaryCard = ({ diary }: { diary: DiaryData }) => {
+  const addressFromCoords = useAddressFromCoords(
+    diary.latitude,
+    diary.longitude,
+  );
+  const address = addressFromCoords || diary.address || 'No Place';
+
   return (
     <DiaryCard>
       <DiaryTopRow>
@@ -24,12 +31,12 @@ const DigestDiaryCard = ({ diary }: DiaryProps) => {
               size={16}
               style={{ color: '#757575', marginRight: '4px' }}
             />
-            {diary.date || 'No Date'}
+            {diary.capturedAt || 'No Date'}
           </DiaryDate>
         </DiaryLeftGroup>
         <DiaryLocation>
           <FaMapMarkerAlt size={16} style={{ marginRight: '4px' }} />
-          {diary.location || 'No Place'}
+          {address}
         </DiaryLocation>
       </DiaryTopRow>
       <Divider />
@@ -42,8 +49,11 @@ const DigestDiaryCard = ({ diary }: DiaryProps) => {
           )}
         </DiaryImageBox>
         <DiaryTextBlock>
-          <DiaryPrompt>{diary.prompt || 'No Question'}</DiaryPrompt>
-          <DiaryPreview>{diary.preview || 'No Content'}</DiaryPreview>
+          <DiarySummary>
+            {diary.diarySummary?.trim() !== ''
+              ? diary.diarySummary
+              : 'No Summary'}
+          </DiarySummary>
         </DiaryTextBlock>
       </DiaryContentRow>
     </DiaryCard>
@@ -131,18 +141,14 @@ const DiaryImageBox = styled.div`
 const DiaryTextBlock = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: center;
   flex: 1;
 `;
 
-const DiaryPrompt = styled.div`
-  font-weight: 600;
-  font-size: 15px;
-  color: #4b9cd3;
-  margin-top: 30px;
-`;
-
-const DiaryPreview = styled.div`
+const DiarySummary = styled.div`
   font-size: 14px;
   color: #333;
+  margin-top: 30px;
+  text-align: left;
+  line-height: 1.6;
 `;

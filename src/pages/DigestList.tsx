@@ -9,7 +9,7 @@ import DigestCard from '@components/DigestCard';
 import { getDigestListByUser } from '@/services/diary';
 import { DigestItemType } from '@/types/diary';
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 3;
 
 const DigestList = () => {
   const [digests, setDigests] = useState<DigestItemType[]>([]);
@@ -39,6 +39,7 @@ const DigestList = () => {
               currentItems.map(digest => (
                 <DigestCard
                   key={digest.id}
+                  digestId={String(digest.id)}
                   dateText={`${digest.periodStart} ~ ${digest.periodEnd}`}
                   title={digest.title}
                   content={digest.summary}
