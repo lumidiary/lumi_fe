@@ -29,34 +29,24 @@ const DiaryCreate = () => {
   const [, setIsAnalysisDone] = useState(false);
 
   const handleWsMessage = useCallback(
-    (parsed: { type: any; content: any; questions: any }) => {
-      const { type, content, questions } = parsed;
-      switch (type) {
-        case 'QUESTION':
-          if (Array.isArray(questions)) {
-            const questionTexts = questions.map(q => q.question);
-            console.log('[질문 수신됨]', questionTexts);
-            setQuestions(prev => [...prev, ...questions.map(q => q.question)]);
-            setQuestionIds(prev => [...prev, ...questions.map(q => q.id)]);
-          }
-          break;
-        case 'ANALYSIS_COMPLETE':
-          setIsAnalysisDone(true);
-          break;
-        case 'ERROR':
-          console.log('UNKNOWN 에러:', content);
-          break;
-        case 'DISCONNECT_REQUEST':
-          console.log('서버에서 연결 해제를 요청했습니다.');
-          break;
-        default:
-          console.log('UNKNOWN MESSAGE:', parsed);
-      }
+    ({
+      overallDaySummary,
+      questions: finalQs,
+    }: {
+      overallDaySummary: string;
+      questions: { id: string; question: string }[];
+    }) => {
+      console.log('[Summary]', overallDaySummary);
+      console.log('[Questions]', finalQs);
+      // extract question texts and ids
+      setQuestions(finalQs.map(q => q.question));
+      setQuestionIds(finalQs.map(q => q.id));
+      setIsAnalysisDone(true);
     },
     [],
   );
-  const test = 'ca802f5b-436e-4b76-95f8-b96d3d08e074';
-  useDiaryWebSocket(test, handleWsMessage);
+  // const diaryId = 'ca802f5b-436e-4b76-95f8-b96d3d08e074';
+  useDiaryWebSocket(diaryId, handleWsMessage);
 
   const handleAnswerChange = (index: number, value: string) => {
     const newAnswers = [...answers];
@@ -87,20 +77,6 @@ const DiaryCreate = () => {
           answer: answers[i] || '',
         })),
       };
-      // 기존 더미 데이터 주석 처리
-      // answers: [
-      //   {
-      //     id: '40ff5670-67eb-487f-9409-acf965191f29',
-      //     answer:
-      //       '화이트 밸런스를 따뜻하게 조정하고, HSL에서 오렌지와 레드를 강조하세요.',
-      //   },
-      //   {
-      //     id: '407fac8d-57dd-4893-8051-8a2818033a83',
-      //     answer:
-      //       '선명도와 텍스처를 높이고, 나무 부분만 마스킹해서 디테일을 강조하세요.',
-      //   },
-      // ],
-
       const response = await fetch(
         `${import.meta.env.VITE_SERVER_URL}/core/diaries/answers`,
         {

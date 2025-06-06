@@ -51,21 +51,3 @@ export const createSession = async (
   if (onSuccess) onSuccess(diaryId);
   return diaryId;
 };
-
-export const startAnalysis = async (
-  diaryId: string,
-  onSuccess?: () => void,
-) => {
-  const res = await fetch(
-    `${import.meta.env.VITE_SERVER_URL}/core/images/session/${diaryId}`,
-  );
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`분석 요청 실패: ${res.status} - ${text}`);
-  }
-
-  console.log('분석 요청 성공');
-
-  if (onSuccess) onSuccess();
-};

@@ -12,7 +12,7 @@ import {
   ContentContainer,
 } from '@components/common/index';
 import ImageFrame from '@components/ImageFrame';
-import { createSession, startAnalysis } from '@/services/diaryapi';
+import { createSession } from '@/services/diaryapi';
 
 const DiaryImageUpload = () => {
   const [images, setImages] = useState<string[]>([]);
@@ -51,7 +51,6 @@ const DiaryImageUpload = () => {
     const fileNames = files.map(file => file.name);
     try {
       const diaryId = await createSession(fileNames, files);
-      await startAnalysis(diaryId);
       navigate('/create/content', { state: { images, diaryId } });
     } catch (err) {
       console.error('이미지 업로드 또는 세션 생성 실패:', err);
