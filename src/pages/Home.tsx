@@ -5,36 +5,52 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { getCurrentUser, User } from '../services/auth';
+import { getDiaryListByUser, getDigestListByUser } from '@/services/diary';
 import { UserHeader, ContentContainer, Button } from '@components/common';
 import { PostCard, DigestCard } from '@components/index';
-import { recentPosts, digests } from '@constants/dummy'; // 임시 더미 데이터
+import { EmotionType } from '@/types/emotion';
+import { DiaryListItemType, DigestItemType } from '@/types/diary';
+import { requestGetFetch } from '@/services/apiService';
 
 const Home = () => {
   const navigate = useNavigate();
-
-  // ① 사용자 정보 조회
-  const [user, setUser] = useState<User | null>(null);
+  const [username, setUsername] = useState<string>();
   const [loadingUser, setLoadingUser] = useState(true);
+  const [recentPosts, setRecentPosts] = useState<DiaryListItemType[]>([]);
+  const [digests, setDigests] = useState<DigestItemType[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      navigate('/login', { replace: true });
-      return;
-    }
+    const fetchUserProfile = async () => {
+      try {
+        const data = await requestGetFetch('users/profile', 'tokenAndUserId');
+        setUsername(data.name);
+      } catch (error) {
+        console.error('프로필 불러오기 실패:', error);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
 
-    getCurrentUser()
-      .then(u => setUser(u))
-      .catch(err => console.error(err))
-      .finally(() => setLoadingUser(false));
+    fetchUserProfile();
   }, []);
 
-  // 인사말 로직직
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    getDiaryListByUser(userId)
+      .then(data => setRecentPosts(data.slice(0, 4)))
+      .catch(err => console.error('📌 일기 조회 실패:', err));
+
+    getDigestListByUser(userId)
+      .then(data => setDigests(data.slice(0, 2)))
+      .catch(err => console.error('📌 다이제스트 조회 실패:', err));
+  }, []); // 최초 렌더링에 한 번만 실행
+
   const greeting = loadingUser
     ? '안녕하세요!'
-    : user
-      ? `안녕하세요, ${user.nickname}님.`
+    : username
+      ? `안녕하세요, ${username}님.`
       : '안녕하세요, 손님!';
 
   return (
@@ -42,7 +58,6 @@ const Home = () => {
       <UserHeader />
       <ContentContainer>
         <Content>
-          {/*상단헤더*/}
           <Header>
             <Title>{greeting} 오늘 하루는 어땠나요?</Title>
             <Button
@@ -50,49 +65,54 @@ const Home = () => {
               buttonText="+ 일기 작성하기"
               onClick={() => navigate('/create/image-upload')}
             />
-            {/* ✅ App에 맞게 수정 */}
           </Header>
 
-          {/*최근글 섹션 */}
           <SectionHeader>
             <SubTitle>최근 글</SubTitle>
             <MoreLink onClick={() => navigate('/diary/list')}>
               더보기 &gt;
-            </MoreLink>{' '}
-            {/* ✅ App에 맞게 수정 */}
+            </MoreLink>
           </SectionHeader>
+
           <CardRow>
-            {recentPosts.map(post => (
-              <PostCard
-                key={post.id}
-                date={post.date}
-                emotion={post.emotion}
-                content={post.content}
-                postId={post.id}
-                imageUrl={post.imageUrl}
-              />
-            ))}
+            {recentPosts.length > 0 ? (
+              recentPosts.map(post => (
+                <PostCard
+                  key={post.diaryId}
+                  date={post.createdAt.slice(0, 10)}
+                  emotion={post.emotionTag as EmotionType}
+                  content={post.overallDaySummary}
+                  postId={post.diaryId}
+                  imageUrl={post.firstPhoto?.url}
+                />
+              ))
+            ) : (
+              <EmptyMessage>작성된 일기가 없습니다.</EmptyMessage>
+            )}
           </CardRow>
 
-          {/*다이제스트 섹션*/}
           <SectionHeader>
             <SubTitle>다이제스트</SubTitle>
             <MoreLink onClick={() => navigate('/digest/list')}>
               더보기 &gt;
             </MoreLink>
-            {/* ✅ App에 맞게 수정 */}
           </SectionHeader>
+
           <CardColumn>
-            {digests.map(digest => (
-              <DigestCard
-                key={digest.id}
-                dateText={digest.dateText}
-                title={digest.title}
-                content={digest.content}
-                monthPath={digest.monthPath}
-                imageUrl={digest.imageUrl}
-              />
-            ))}
+            {digests.length > 0 ? (
+              digests.map(d => (
+                <DigestCard
+                  key={d.id}
+                  dateText={`${d.periodStart} ~ ${d.periodEnd}`}
+                  title={d.title}
+                  content={d.summary}
+                  monthPath={d.periodStart.slice(0, 7)}
+                  imageUrl={d.imageUrl || ''}
+                />
+              ))
+            ) : (
+              <EmptyMessage>생성된 다이제스트가 없습니다.</EmptyMessage>
+            )}
           </CardColumn>
         </Content>
       </ContentContainer>
@@ -146,10 +166,14 @@ const MoreLink = styled.span`
 `;
 
 const CardRow = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
   margin-bottom: 2rem;
-  justify-content: center;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
 `;
 
 const CardColumn = styled.div`
@@ -157,4 +181,12 @@ const CardColumn = styled.div`
   flex-direction: column;
   gap: 20px;
   align-items: center;
+`;
+
+const EmptyMessage = styled.p`
+  font-size: 0.95rem;
+  color: #888;
+  text-align: center;
+  padding: 20px;
+  width: 100%;
 `;

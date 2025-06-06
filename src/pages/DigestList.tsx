@@ -6,23 +6,28 @@ import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { BackHeader, ContentContainer } from '@components/common';
 import DigestCard from '@components/DigestCard';
-import { pastDigests } from '@constants/dummy';
+import { getDigestListByUser } from '@/services/diary';
+import { DigestItemType } from '@/types/diary';
 
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 6;
 
 const DigestList = () => {
+  const [digests, setDigests] = useState<DigestItemType[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const totalPages = Math.ceil(pastDigests.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(digests.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentItems = pastDigests.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE,
-  );
+  const currentItems = digests.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    getDigestListByUser(userId)
+      .then((data: DigestItemType[]) => setDigests(data))
+      .catch((err: unknown) =>
+        console.error('다이제스트 목록 조회 실패:', err),
+      );
+  });
 
   return (
     <Container>
@@ -30,16 +35,20 @@ const DigestList = () => {
       <ContentContainer>
         <Content>
           <CardColumn>
-            {currentItems.map(digest => (
-              <DigestCard
-                key={digest.id}
-                dateText={digest.dateText}
-                title={digest.title}
-                content={digest.content}
-                monthPath={digest.monthPath}
-                imageUrl={digest.imageUrl}
-              />
-            ))}
+            {currentItems.length > 0 ? (
+              currentItems.map(digest => (
+                <DigestCard
+                  key={digest.id}
+                  dateText={`${digest.periodStart} ~ ${digest.periodEnd}`}
+                  title={digest.title}
+                  content={digest.summary}
+                  monthPath={digest.periodStart.slice(0, 7)}
+                  imageUrl={digest.imageUrl}
+                />
+              ))
+            ) : (
+              <EmptyMessage>생성된 다이제스트가 없습니다.</EmptyMessage>
+            )}
           </CardColumn>
 
           <Pagination>
@@ -97,4 +106,12 @@ const PageButton = styled.button<{ active: boolean }>`
   background-color: ${({ active }) => (active ? '#4B9CD3' : '#e0e0e0')};
   color: ${({ active }) => (active ? 'white' : '#333')};
   cursor: pointer;
+`;
+
+const EmptyMessage = styled.p`
+  font-size: 0.95rem;
+  color: #888;
+  text-align: center;
+  padding: 20px;
+  width: 100%;
 `;
