@@ -71,7 +71,7 @@ const Digest = () => {
     const fetchDigest = async () => {
       try {
         const res = await fetch(
-          `https://api.lumidiary.com/core/digests/${digestId}`,
+          `${import.meta.env.VITE_SERVER_URL}/core/digests/${digestId}`,
         );
         const data = await res.json();
 

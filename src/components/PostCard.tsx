@@ -4,13 +4,13 @@
 
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { emotionEmojiMap, EmotionType } from '@/types/emotion';
+import { EmotionType, emotionEmojiMap } from '@/types/emotion';
 
 interface PostCardProps {
   date: string;
-  emotion: EmotionType;
+  emotion?: EmotionType;
   content: string;
-  postId: number;
+  postId: string;
   imageUrl?: string;
 }
 
@@ -22,7 +22,7 @@ const PostCard = ({
   imageUrl,
 }: PostCardProps) => {
   const navigate = useNavigate();
-  const emoji = emotionEmojiMap[emotion];
+  const emoji = emotionEmojiMap[emotion as EmotionType] ?? '';
 
   return (
     <StyledPostCard>

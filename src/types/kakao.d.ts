@@ -1,4 +1,4 @@
-// 📍 src/types/kakao.d.ts
+// src/types/kakao.d.ts
 
 export {};
 
